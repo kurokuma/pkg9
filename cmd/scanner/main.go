@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -15,8 +14,9 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		exitErr(errors.New("expected subcommand: scan, rules"))
+	if len(os.Args) < 2 || isHelpArg(os.Args[1]) {
+		printRootUsage()
+		return
 	}
 
 	switch os.Args[1] {
@@ -31,6 +31,13 @@ func main() {
 
 func runScan(args []string) {
 	fs := flag.NewFlagSet("scan", flag.ExitOnError)
+	fs.SetOutput(os.Stdout)
+	fs.Usage = func() {
+		fmt.Fprintf(fs.Output(), "Usage: %s scan [options]\n\n", os.Args[0])
+		fmt.Fprintln(fs.Output(), "Scan an unpacked package directory.")
+		fmt.Fprintln(fs.Output(), "\nOptions:")
+		fs.PrintDefaults()
+	}
 	path := fs.String("path", ".", "path to unpacked package directory")
 	ecosystem := fs.String("ecosystem", "", "ecosystem override")
 	rulesDir := fs.String("rules-dir", "rules", "root rules directory")
@@ -52,13 +59,21 @@ func runScan(args []string) {
 }
 
 func runRules(args []string) {
-	if len(args) == 0 {
-		exitErr(errors.New("expected rules subcommand: validate, list"))
+	if len(args) == 0 || isHelpArg(args[0]) {
+		printRulesUsage()
+		return
 	}
 
 	switch args[0] {
 	case "validate":
 		fs := flag.NewFlagSet("rules validate", flag.ExitOnError)
+		fs.SetOutput(os.Stdout)
+		fs.Usage = func() {
+			fmt.Fprintf(fs.Output(), "Usage: %s rules validate [options]\n\n", os.Args[0])
+			fmt.Fprintln(fs.Output(), "Validate rule files under the rules directory.")
+			fmt.Fprintln(fs.Output(), "\nOptions:")
+			fs.PrintDefaults()
+		}
 		rulesDir := fs.String("rules-dir", "rules", "root rules directory")
 		fs.Parse(args[1:])
 
@@ -80,6 +95,13 @@ func runRules(args []string) {
 		})
 	case "list":
 		fs := flag.NewFlagSet("rules list", flag.ExitOnError)
+		fs.SetOutput(os.Stdout)
+		fs.Usage = func() {
+			fmt.Fprintf(fs.Output(), "Usage: %s rules list [options]\n\n", os.Args[0])
+			fmt.Fprintln(fs.Output(), "List loadable rules.")
+			fmt.Fprintln(fs.Output(), "\nOptions:")
+			fs.PrintDefaults()
+		}
 		rulesDir := fs.String("rules-dir", "rules", "root rules directory")
 		fs.Parse(args[1:])
 
@@ -130,6 +152,32 @@ func writeJSON(v any) {
 	if err := enc.Encode(v); err != nil {
 		exitErr(err)
 	}
+}
+
+func printRootUsage() {
+	fmt.Printf("Usage: %s <command> [options]\n\n", os.Args[0])
+	fmt.Println("Commands:")
+	fmt.Println("  scan              Scan an unpacked package directory")
+	fmt.Println("  rules validate    Validate rule files")
+	fmt.Println("  rules list        List loadable rules")
+	fmt.Println("\nHelp:")
+	fmt.Printf("  %s -h\n", os.Args[0])
+	fmt.Printf("  %s scan -h\n", os.Args[0])
+	fmt.Printf("  %s rules -h\n", os.Args[0])
+}
+
+func printRulesUsage() {
+	fmt.Printf("Usage: %s rules <command> [options]\n\n", os.Args[0])
+	fmt.Println("Commands:")
+	fmt.Println("  validate          Validate rule files")
+	fmt.Println("  list              List loadable rules")
+	fmt.Println("\nHelp:")
+	fmt.Printf("  %s rules validate -h\n", os.Args[0])
+	fmt.Printf("  %s rules list -h\n", os.Args[0])
+}
+
+func isHelpArg(arg string) bool {
+	return arg == "-h" || arg == "--help" || arg == "help"
 }
 
 func exitErr(err error) {

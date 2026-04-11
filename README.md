@@ -14,7 +14,11 @@ Japanese README: [README.ja.md](./README.ja.md)
 - File, manifest, and package scopes
 - Structured JSON output for findings, warnings, errors, and optional artifacts
 - Built-in and custom rule directories
-- Basic preprocessing and scanner primitives
+- Deobfuscation preprocessing
+- AST-based JavaScript scanning
+- AST-based and packaging-aware Python scanning
+- Intent and inter-module dataflow lite
+- Obfuscation, AI config, typosquat, entropy, lifecycle, and hash scanners
 
 ## Repository Layout
 
@@ -44,6 +48,13 @@ testdata/samples/      sample packages for tests
 go build ./cmd/scanner
 ```
 
+Run the built binary:
+
+```bash
+./scanner -h
+./scanner scan --path ./testdata/samples/npm-basic --rules-dir ./rules
+```
+
 If your environment restricts the default Go cache path, use a local cache:
 
 ```bash
@@ -57,6 +68,20 @@ GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go build ./cmd/sc
 
 ```bash
 go run ./cmd/scanner scan --path ./testdata/samples/npm-basic --rules-dir ./rules
+```
+
+or, after build:
+
+```bash
+./scanner scan --path ./testdata/samples/npm-basic --rules-dir ./rules
+```
+
+Help:
+
+```bash
+go run ./cmd/scanner -h
+go run ./cmd/scanner scan -h
+go run ./cmd/scanner rules -h
 ```
 
 Optional flags:
@@ -99,15 +124,30 @@ The scanner emits JSON with this top-level structure:
 - `lifecycle_hook`: extracts lifecycle hooks from package metadata
 - `entropy`: reports high-entropy tokens in text files
 - `hash`: records per-file SHA-256 hashes
+- `hash_ioc`: matches file hashes against a built-in IOC set
 - `dependency_ioc`: matches dependencies against a built-in IOC list
+- `typosquat`: checks dependency names against common packages
+- `obfuscation`: detects obfuscation indicators outside minified JS
+- `ai_config`: detects prompt-injection style AI config files
+- `intent_dataflow`: detects source-sink intent coherence and cross-file flow lite
+- `js_ast`: parses JavaScript AST for eval, exec, credential access, droppers, and prototype hooks
+- `python`: scans Python source and packaging files for exec, credentials, network, setup, and remote requirements
 
 ## Built-in Rules
 
-Current built-in rules are stored in [rules/builtin](/Users/nanoha/work/pkg9/rules/builtin):
+Current built-in rules are stored in [rules/builtin](/Users/nanoha/work/pkg9/rules/builtin).
 
-- install lifecycle hook detection for npm packages
-- high-entropy token signal detection
-- suspicious dependency IOC detection
+Current coverage includes:
+
+- npm lifecycle script abuse
+- dangerous shell patterns
+- JavaScript AST signals
+- Python behavior and packaging signals
+- AI config injection
+- obfuscation
+- intent coherence and inter-module dataflow lite
+- typosquat detection
+- entropy and IOC-assisted findings
 
 ## Rule Files
 
@@ -152,4 +192,16 @@ GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go test ./...
 
 ## Status
 
-This is a v1 foundation implementation. It already supports end-to-end scanning, but several design targets in `malicious_package_scanner.md` are still future work, including richer matchers, more ecosystems, cross-file analysis, suppression, scoring, and additional output formats.
+This is still a foundation implementation, but it now includes AST-based JavaScript scanning, Python AST-assisted scanning, deobfuscation preprocessing, AI config scanning, typosquat detection, and lightweight intra/inter-file dataflow. It is still not a full Semgrep- or CodeQL-class engine: deeper alias analysis, precise call graph resolution, stronger taint tracking, more ecosystems, suppression, scoring, and extra output formats remain future work.
+
+## Not Yet Implemented
+
+- Precise alias analysis and stronger taint propagation for JavaScript and Python
+- More complete call graph resolution across files and modules
+- More accurate inter-procedural and class/object method dataflow
+- Additional ecosystems beyond npm and PyPI
+- Richer matcher types beyond the current regex / field / scanner-assisted set
+- Suppression and baseline workflows
+- Scoring and prioritization layer
+- Additional output formats such as SARIF
+- Large curated intelligence datasets are intentionally out of scope here unless explicitly added

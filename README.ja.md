@@ -14,7 +14,11 @@ English README: [README.md](./README.md)
 - file / manifest / package scope
 - findings / warnings / errors / optional artifacts の JSON 出力
 - built-in / custom ルールディレクトリ
-- 基本的な preprocessing と scanner primitive
+- deobfuscation preprocessing
+- JavaScript の AST ベース検知
+- Python の AST / packaging 対応スキャン
+- intent / inter-module dataflow lite
+- obfuscation、AI config、typosquat、entropy、lifecycle、hash scanner
 
 ## ディレクトリ構成
 
@@ -44,6 +48,13 @@ testdata/samples/      テスト用サンプルパッケージ
 go build ./cmd/scanner
 ```
 
+ビルド後は生成されたバイナリをそのまま実行できます。
+
+```bash
+./scanner -h
+./scanner scan --path ./testdata/samples/npm-basic --rules-dir ./rules
+```
+
 Go のデフォルトキャッシュ先が使えない環境では、ローカルキャッシュを使ってください。
 
 ```bash
@@ -57,6 +68,20 @@ GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go build ./cmd/sc
 
 ```bash
 go run ./cmd/scanner scan --path ./testdata/samples/npm-basic --rules-dir ./rules
+```
+
+または build 後:
+
+```bash
+./scanner scan --path ./testdata/samples/npm-basic --rules-dir ./rules
+```
+
+ヘルプ:
+
+```bash
+go run ./cmd/scanner -h
+go run ./cmd/scanner scan -h
+go run ./cmd/scanner rules -h
 ```
 
 主なオプション:
@@ -99,15 +124,30 @@ go run ./cmd/scanner rules list --rules-dir ./rules
 - `lifecycle_hook`: パッケージメタデータから lifecycle hook を抽出
 - `entropy`: テキストファイル中の高エントロピー文字列を検出
 - `hash`: 各ファイルの SHA-256 を記録
+- `hash_ioc`: 組み込み hash IOC と照合
 - `dependency_ioc`: 組み込み IOC リストと依存関係を照合
+- `typosquat`: 依存関係名の typo-squatting 候補を検出
+- `obfuscation`: minified 以外の難読化指標を検出
+- `ai_config`: AI 設定ファイルの prompt injection を検出
+- `intent_dataflow`: source-sink の intent coherence と cross-file flow lite を検出
+- `js_ast`: JavaScript AST から eval、exec、credential access、dropper、prototype hook を検出
+- `python`: Python source / packaging から exec、credential、network、setup、remote requirements を検出
 
 ## 組み込みルール
 
 現在の built-in ルールは [rules/builtin](/Users/nanoha/work/pkg9/rules/builtin) にあります。
 
-- npm の install lifecycle hook 検知
-- 高エントロピー token signal 検知
-- 不審な dependency IOC 検知
+主なカバレッジ:
+
+- npm lifecycle script の悪用検知
+- 危険な shell pattern
+- JavaScript AST シグナル
+- Python の挙動 / packaging シグナル
+- AI config injection
+- obfuscation
+- intent coherence / inter-module dataflow lite
+- typosquat 検知
+- entropy と IOC 補助 finding
 
 ## ルールファイル
 
@@ -152,4 +192,16 @@ GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go test ./...
 
 ## ステータス
 
-これは v1 の基盤実装です。エンドツーエンドのスキャンは可能ですが、`malicious_package_scanner.md` にある設計目標のうち、より高度な matcher、ecosystem 追加、cross-file analysis、suppression、scoring、追加出力形式などは今後の実装対象です。
+これはまだ基盤実装ですが、JavaScript AST scanning、Python AST-assisted scanning、deobfuscation preprocessing、AI config scanning、typosquat detection、軽量な intra/inter-file dataflow まで入っています。一方で、より厳密な alias analysis、call graph 解決、taint tracking、ecosystem 追加、suppression、scoring、追加出力形式などは今後の実装対象です。
+
+## 未到達の項目
+
+- JavaScript / Python のより厳密な alias analysis と taint propagation
+- file / module をまたぐ、より完全な call graph 解決
+- class / object method を含む、より正確な inter-procedural dataflow
+- npm / PyPI 以外の ecosystem 追加
+- 現在の regex / field / scanner-assisted 以外の richer matcher
+- suppression / baseline の運用機能
+- scoring / 優先度付けレイヤ
+- SARIF などの追加出力形式
+- 大規模な intelligence dataset は、明示的に追加しない限りこの実装の対象外
