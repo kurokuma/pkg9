@@ -29,6 +29,9 @@ Thumbs.db
 /mal-package-downloader/dl-sample/
 /mal-package-downloader/npm_mal_list.txt
 /pkg9-bulk-out/
+/pkg9-bulk-out/*.json
+/pkg9-bulk-out_*/
+/pkg9-bulk-out_*/*.json
 /mal-package-downloader/pypi_mal_list.txt
 
 *.pyc
