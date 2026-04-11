@@ -3,3 +3,5 @@ pinokiod@7.1.67
 pinokiod@7.1.62
 pathfix@3.0.8
 webpack-loader-css-branch@2.0.5
+angflarjs@1.1.4
+lovable-ts@3.1.3
