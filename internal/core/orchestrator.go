@@ -13,6 +13,7 @@ import (
 	"github.com/kurokuma/pkg9/internal/adapters/npm"
 	"github.com/kurokuma/pkg9/internal/adapters/pypi"
 	"github.com/kurokuma/pkg9/internal/app"
+	"github.com/kurokuma/pkg9/internal/baseline"
 	"github.com/kurokuma/pkg9/internal/files"
 	"github.com/kurokuma/pkg9/internal/matcher"
 	"github.com/kurokuma/pkg9/internal/model"
@@ -44,6 +45,7 @@ type ScanRequest struct {
 	Ecosystem        string
 	RulesRoot        string
 	IncludeArtifacts bool
+	BaselinePath     string
 }
 
 func NewEngine(engineVersion string) Engine {
@@ -95,6 +97,14 @@ func (e Engine) Scan(ctx context.Context, req ScanRequest) (model.ScanResult, er
 
 	warnings := append(scannerWarnings, ruleIssues.Warnings...)
 	errors := append(scannerErrors, ruleIssues.Errors...)
+	suppressedFindings := 0
+	if req.BaselinePath != "" {
+		base, err := baseline.Load(req.BaselinePath)
+		if err != nil {
+			return model.ScanResult{}, fmt.Errorf("load baseline: %w", err)
+		}
+		findings, suppressedFindings = baseline.Apply(findings, base)
+	}
 	riskScore := calculateRiskScore(target, findings, signals)
 	finishedAt := time.Now().UTC()
 
@@ -114,6 +124,7 @@ func (e Engine) Scan(ctx context.Context, req ScanRequest) (model.ScanResult, er
 				"rules_root":          req.RulesRoot,
 				"include_artifacts":   req.IncludeArtifacts,
 				"requested_ecosystem": req.Ecosystem,
+				"baseline_path":       req.BaselinePath,
 			},
 		},
 		Summary: model.Summary{
@@ -131,6 +142,7 @@ func (e Engine) Scan(ctx context.Context, req ScanRequest) (model.ScanResult, er
 			ErrorsTotal:          len(errors),
 			SeverityCounts:       severityCounts(findings),
 			SkipReasonCounts:     skipCounts,
+			SuppressedFindings:   suppressedFindings,
 			RiskScore:            riskScore,
 			RiskLevel:            calculateRiskLevel(riskScore),
 		},
@@ -309,6 +321,9 @@ func severityCounts(findings []model.Finding) map[string]int {
 }
 
 func calculateRiskScore(target model.ScanTarget, findings []model.Finding, signals map[string][]map[string]any) int {
+	if len(findings) == 0 {
+		return 0
+	}
 	score := 0
 	for _, finding := range findings {
 		switch strings.ToLower(finding.Severity) {
@@ -363,17 +378,23 @@ func calculateRiskScore(target model.ScanTarget, findings []model.Finding, signa
 }
 
 func calculateRiskLevel(score int) string {
+	if score < 0 {
+		score = 0
+	}
+	if score > 100 {
+		score = 100
+	}
 	switch {
-	case score >= 80:
-		return "critical"
-	case score >= 55:
-		return "high"
-	case score >= 30:
-		return "medium"
-	case score >= 10:
-		return "low"
+	case score >= 75:
+		return "CRITICAL"
+	case score >= 50:
+		return "HIGH"
+	case score >= 25:
+		return "MEDIUM"
+	case score >= 1:
+		return "LOW"
 	default:
-		return "info"
+		return "SAFE"
 	}
 }
 

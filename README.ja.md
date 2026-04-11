@@ -13,6 +13,7 @@ English README: [README.md](./README.md)
 - YAML ルールのロード、検証、実行
 - file / manifest / package scope
 - findings / warnings / errors / optional artifacts の JSON 出力
+- JSON / SARIF 出力
 - built-in / custom ルールディレクトリ
 - deobfuscation preprocessing
 - JavaScript の AST ベース検知
@@ -87,8 +88,11 @@ go run ./cmd/scanner rules -h
 主なオプション:
 
 - `--ecosystem npm|pypi`: adapter を明示指定
+- `--format json|sarif`: 出力形式を指定
 - `--include-artifacts`: internal artifacts を JSON に含める
 - `--rules-dir ./rules`: ルールのルートディレクトリを変更
+- `--baseline ./baseline.json`: baseline に一致する finding を suppress
+- `--write-baseline ./baseline.json`: 現在の finding を baseline JSON に書き出し
 
 ### ルールを検証する
 
@@ -104,7 +108,9 @@ go run ./cmd/scanner rules list --rules-dir ./rules
 
 ## 出力形式
 
-トップレベルは次の JSON 構造です。
+出力形式は `json` と `sarif` をサポートします。
+
+JSON のトップレベルは次の構造です。
 
 ```json
 {
@@ -118,6 +124,28 @@ go run ./cmd/scanner rules list --rules-dir ./rules
 ```
 
 `artifacts` は `--include-artifacts` 指定時のみ出力されます。
+
+`summary` には次も含まれます。
+
+- `risk_score`
+- `risk_level`
+- `suppressed_findings`
+
+SARIF の例:
+
+```bash
+./scanner scan --path ./testdata/samples/npm-basic --rules-dir ./rules --format sarif
+```
+
+baseline 運用の例:
+
+```bash
+./scanner scan --path ./testdata/samples/npm-basic --rules-dir ./rules --write-baseline ./baseline.json
+./scanner scan --path ./testdata/samples/npm-basic --rules-dir ./rules --baseline ./baseline.json
+```
+
+`risk_score` は `0..100` に丸められます。  
+`risk_level` は `SAFE`, `LOW`, `MEDIUM`, `HIGH`, `CRITICAL` のいずれかです。
 
 ## 組み込み Scanner
 
@@ -192,7 +220,7 @@ GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go test ./...
 
 ## ステータス
 
-これはまだ基盤実装ですが、JavaScript AST scanning、Python AST-assisted scanning、deobfuscation preprocessing、AI config scanning、typosquat detection、軽量な intra/inter-file dataflow まで入っています。一方で、より厳密な alias analysis、call graph 解決、taint tracking、ecosystem 追加、suppression、scoring、追加出力形式などは今後の実装対象です。
+これはまだ基盤実装ですが、JavaScript AST scanning、Python AST-assisted scanning、deobfuscation preprocessing、AI config scanning、typosquat detection、軽量な intra/inter-file dataflow、heuristic risk scoring、SARIF 出力、baseline ベースの suppression まで入っています。一方で、より厳密な alias analysis、call graph 解決、taint tracking、ecosystem 追加、より高度な優先度付けなどは今後の実装対象です。
 
 ## 未到達の項目
 
@@ -201,7 +229,5 @@ GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go test ./...
 - class / object method を含む、より正確な inter-procedural dataflow
 - npm / PyPI 以外の ecosystem 追加
 - 現在の regex / field / scanner-assisted 以外の richer matcher
-- suppression / baseline の運用機能
-- scoring / 優先度付けレイヤ
-- SARIF などの追加出力形式
+- より高度な scoring / 優先度付けレイヤ
 - 大規模な intelligence dataset は、明示的に追加しない限りこの実装の対象外

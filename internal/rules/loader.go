@@ -57,11 +57,15 @@ type Condition struct {
 	Regex               *Regex          `yaml:"regex"`
 	FieldExists         string          `yaml:"field_exists"`
 	FieldEquals         *FieldEquals    `yaml:"field_equals"`
+	FieldMatches        *FieldMatches   `yaml:"field_matches"`
+	FieldIn             *FieldIn        `yaml:"field_in"`
 	ManifestKeyExists   string          `yaml:"manifest_key_exists"`
 	ManifestValueEquals *ManifestEquals `yaml:"manifest_value_equals"`
 	PathMatches         string          `yaml:"path_matches"`
 	ScannerSignalExists string          `yaml:"scanner_signal_exists"`
+	SignalCountAtLeast  *SignalCount    `yaml:"signal_count_at_least"`
 	ArtifactMatch       *ArtifactMatch  `yaml:"artifact_match"`
+	ArtifactFieldEquals *ArtifactField  `yaml:"artifact_field_equals"`
 }
 
 type Contains struct {
@@ -78,14 +82,36 @@ type FieldEquals struct {
 	Value string `yaml:"value"`
 }
 
+type FieldMatches struct {
+	Field    string         `yaml:"field"`
+	Pattern  string         `yaml:"pattern"`
+	Compiled *regexp.Regexp `yaml:"-"`
+}
+
+type FieldIn struct {
+	Field  string   `yaml:"field"`
+	Values []string `yaml:"values"`
+}
+
 type ManifestEquals struct {
 	Key   string `yaml:"key"`
 	Value string `yaml:"value"`
 }
 
+type SignalCount struct {
+	ScannerID string `yaml:"scanner_id"`
+	Min       int    `yaml:"min"`
+}
+
 type ArtifactMatch struct {
 	ArtifactType string `yaml:"artifact_type"`
 	Contains     string `yaml:"contains"`
+}
+
+type ArtifactField struct {
+	ArtifactType string `yaml:"artifact_type"`
+	Field        string `yaml:"field"`
+	Value        string `yaml:"value"`
 }
 
 type Rule struct {
@@ -183,6 +209,14 @@ func compileCondition(condition *Condition, bundle *issueBundle, path, ruleID st
 			return
 		}
 		condition.Regex.Compiled = re
+	}
+	if condition.FieldMatches != nil {
+		re, err := regexp.Compile(condition.FieldMatches.Pattern)
+		if err != nil {
+			bundle.Errors = append(bundle.Errors, model.StructuredIssue{Code: "RULE_COMPILE_FAILED", Message: err.Error(), Component: "rules", FilePath: path, RuleID: ruleID})
+			return
+		}
+		condition.FieldMatches.Compiled = re
 	}
 	for i := range condition.AllOf {
 		compileCondition(&condition.AllOf[i], bundle, path, ruleID)

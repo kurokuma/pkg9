@@ -13,6 +13,7 @@ Japanese README: [README.ja.md](./README.ja.md)
 - YAML rule loading, validation, and execution
 - File, manifest, and package scopes
 - Structured JSON output for findings, warnings, errors, and optional artifacts
+- JSON and SARIF output
 - Built-in and custom rule directories
 - Deobfuscation preprocessing
 - AST-based JavaScript scanning
@@ -87,8 +88,11 @@ go run ./cmd/scanner rules -h
 Optional flags:
 
 - `--ecosystem npm|pypi`: force adapter selection
+- `--format json|sarif`: choose output format
 - `--include-artifacts`: include internal artifacts in JSON output
 - `--rules-dir ./rules`: change rule root directory
+- `--baseline ./baseline.json`: suppress findings that match a baseline file
+- `--write-baseline ./baseline.json`: write current findings to a baseline file
 
 ### Validate rules
 
@@ -104,7 +108,9 @@ go run ./cmd/scanner rules list --rules-dir ./rules
 
 ## Output
 
-The scanner emits JSON with this top-level structure:
+The scanner supports `json` and `sarif` output.
+
+JSON output has this top-level structure:
 
 ```json
 {
@@ -118,6 +124,28 @@ The scanner emits JSON with this top-level structure:
 ```
 
 `artifacts` is omitted unless `--include-artifacts` is enabled.
+
+`summary` also includes:
+
+- `risk_score`
+- `risk_level`
+- `suppressed_findings`
+
+Example SARIF output:
+
+```bash
+./scanner scan --path ./testdata/samples/npm-basic --rules-dir ./rules --format sarif
+```
+
+Baseline workflow:
+
+```bash
+./scanner scan --path ./testdata/samples/npm-basic --rules-dir ./rules --write-baseline ./baseline.json
+./scanner scan --path ./testdata/samples/npm-basic --rules-dir ./rules --baseline ./baseline.json
+```
+
+`risk_score` is clamped to `0..100`.
+`risk_level` is one of `SAFE`, `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`.
 
 ## Built-in Scanners
 
@@ -192,7 +220,7 @@ GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go test ./...
 
 ## Status
 
-This is still a foundation implementation, but it now includes AST-based JavaScript scanning, Python AST-assisted scanning, deobfuscation preprocessing, AI config scanning, typosquat detection, and lightweight intra/inter-file dataflow. It is still not a full Semgrep- or CodeQL-class engine: deeper alias analysis, precise call graph resolution, stronger taint tracking, more ecosystems, suppression, scoring, and extra output formats remain future work.
+This is still a foundation implementation, but it now includes AST-based JavaScript scanning, Python AST-assisted scanning, deobfuscation preprocessing, AI config scanning, typosquat detection, lightweight intra/inter-file dataflow, heuristic risk scoring, SARIF output, and baseline-driven suppression. It is still not a full Semgrep- or CodeQL-class engine: deeper alias analysis, precise call graph resolution, stronger taint tracking, more ecosystems, and richer prioritization remain future work.
 
 ## Not Yet Implemented
 
@@ -201,7 +229,5 @@ This is still a foundation implementation, but it now includes AST-based JavaScr
 - More accurate inter-procedural and class/object method dataflow
 - Additional ecosystems beyond npm and PyPI
 - Richer matcher types beyond the current regex / field / scanner-assisted set
-- Suppression and baseline workflows
-- Scoring and prioritization layer
-- Additional output formats such as SARIF
+- Richer scoring and prioritization layer
 - Large curated intelligence datasets are intentionally out of scope here unless explicitly added

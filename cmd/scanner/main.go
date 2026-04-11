@@ -9,7 +9,9 @@ import (
 	"path/filepath"
 
 	"github.com/kurokuma/pkg9/internal/app"
+	"github.com/kurokuma/pkg9/internal/baseline"
 	"github.com/kurokuma/pkg9/internal/core"
+	"github.com/kurokuma/pkg9/internal/output"
 	"github.com/kurokuma/pkg9/internal/rules"
 )
 
@@ -41,7 +43,10 @@ func runScan(args []string) {
 	path := fs.String("path", ".", "path to unpacked package directory")
 	ecosystem := fs.String("ecosystem", "", "ecosystem override")
 	rulesDir := fs.String("rules-dir", "rules", "root rules directory")
+	format := fs.String("format", "json", "output format: json or sarif")
 	includeArtifacts := fs.Bool("include-artifacts", false, "include artifacts in output")
+	baselinePath := fs.String("baseline", "", "suppress findings that match a baseline JSON file")
+	writeBaselinePath := fs.String("write-baseline", "", "write the current findings to a baseline JSON file")
 	fs.Parse(args)
 
 	engine := core.NewEngine(app.EngineVersion)
@@ -50,12 +55,25 @@ func runScan(args []string) {
 		Ecosystem:        *ecosystem,
 		RulesRoot:        *rulesDir,
 		IncludeArtifacts: *includeArtifacts,
+		BaselinePath:     *baselinePath,
 	})
 	if err != nil {
 		exitErr(err)
 	}
+	if *writeBaselinePath != "" {
+		if err := baseline.Write(*writeBaselinePath, result, result.Findings); err != nil {
+			exitErr(err)
+		}
+	}
 
-	writeJSON(result)
+	switch *format {
+	case "json":
+		writeJSON(result)
+	case "sarif":
+		writeJSON(output.ToSARIF(result))
+	default:
+		exitErr(fmt.Errorf("unsupported format %q", *format))
+	}
 }
 
 func runRules(args []string) {
