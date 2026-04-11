@@ -4,7 +4,7 @@
 
 このプロジェクトは単発のチェッカーではなく、拡張可能なスキャン基盤として実装されています。パッケージメタデータ、manifest、ファイル、前処理 artifacts、scanner signals を解析し、再現性のある JSON finding を出力します。
 
-English README: [README.md](/Users/nanoha/work/pkg9/README.md)
+English README: [README.md](./README.md)
 
 ## 現在の対応範囲
 

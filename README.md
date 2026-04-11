@@ -4,7 +4,7 @@ A rule-driven package scanner for unpacked npm and PyPI packages.
 
 This project is an extensible scanning foundation rather than a one-off checker. It analyzes package metadata, manifests, files, preprocessing artifacts, and scanner signals, then emits deterministic JSON findings.
 
-Japanese README: [README.ja.md](/Users/nanoha/work/pkg9/README.ja.md)
+Japanese README: [README.ja.md](./README.ja.md)
 
 ## Current Scope
 
