@@ -19,6 +19,12 @@ func TestScanNPMSample(t *testing.T) {
 	if result.Summary.FindingsTotal < 2 {
 		t.Fatalf("expected findings, got %d", result.Summary.FindingsTotal)
 	}
+	if result.Summary.RiskScore <= 0 {
+		t.Fatalf("expected positive risk score, got %d", result.Summary.RiskScore)
+	}
+	if result.Summary.RiskLevel == "" {
+		t.Fatal("expected risk level")
+	}
 }
 
 func TestScanPyPISample(t *testing.T) {
@@ -71,6 +77,9 @@ func TestScanMuaddibDangerousSample(t *testing.T) {
 			t.Fatalf("expected finding for %s, got findings: %+v", ruleID, result.Findings)
 		}
 	}
+	if result.Summary.RiskLevel != "critical" {
+		t.Fatalf("expected critical risk level, got %s", result.Summary.RiskLevel)
+	}
 }
 
 func TestScanPyPIDangerousSample(t *testing.T) {
@@ -100,5 +109,8 @@ func TestScanPyPIDangerousSample(t *testing.T) {
 		if !found {
 			t.Fatalf("expected finding for %s, got findings: %+v", ruleID, result.Findings)
 		}
+	}
+	if result.Summary.RiskScore <= 0 {
+		t.Fatalf("expected positive risk score, got %d", result.Summary.RiskScore)
 	}
 }

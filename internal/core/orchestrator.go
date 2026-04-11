@@ -95,6 +95,7 @@ func (e Engine) Scan(ctx context.Context, req ScanRequest) (model.ScanResult, er
 
 	warnings := append(scannerWarnings, ruleIssues.Warnings...)
 	errors := append(scannerErrors, ruleIssues.Errors...)
+	riskScore := calculateRiskScore(target, findings, signals)
 	finishedAt := time.Now().UTC()
 
 	result := model.ScanResult{
@@ -130,6 +131,8 @@ func (e Engine) Scan(ctx context.Context, req ScanRequest) (model.ScanResult, er
 			ErrorsTotal:          len(errors),
 			SeverityCounts:       severityCounts(findings),
 			SkipReasonCounts:     skipCounts,
+			RiskScore:            riskScore,
+			RiskLevel:            calculateRiskLevel(riskScore),
 		},
 		Findings: findings,
 		Warnings: warnings,
@@ -303,6 +306,75 @@ func severityCounts(findings []model.Finding) map[string]int {
 		out[finding.Severity]++
 	}
 	return out
+}
+
+func calculateRiskScore(target model.ScanTarget, findings []model.Finding, signals map[string][]map[string]any) int {
+	score := 0
+	for _, finding := range findings {
+		switch strings.ToLower(finding.Severity) {
+		case "critical":
+			score += 30
+		case "high":
+			score += 18
+		case "medium":
+			score += 10
+		case "low":
+			score += 4
+		case "info":
+			score += 1
+		}
+	}
+
+	if target.CanonicalPackage.HasInstallHook {
+		score += 8
+	}
+	if target.CanonicalPackage.HasBuildHook {
+		score += 3
+	}
+	if len(signals["intent_coherence"]) > 0 {
+		score += 15
+	}
+	if len(signals["inter_module_dataflow"]) > 0 {
+		score += 15
+	}
+	if len(signals["obfuscation_detected"]) > 0 {
+		score += 8
+	}
+	if len(signals["ai_config_injection"]) > 0 {
+		score += 10
+	}
+	if len(signals["ast_dangerous_exec"]) > 0 {
+		score += 8
+	}
+	if len(signals["python_exec_behavior"]) > 0 {
+		score += 8
+	}
+	if len(signals["typosquat_detected"]) > 0 {
+		score += 6
+	}
+
+	if score > 100 {
+		return 100
+	}
+	if score < 0 {
+		return 0
+	}
+	return score
+}
+
+func calculateRiskLevel(score int) string {
+	switch {
+	case score >= 80:
+		return "critical"
+	case score >= 55:
+		return "high"
+	case score >= 30:
+		return "medium"
+	case score >= 10:
+		return "low"
+	default:
+		return "info"
+	}
 }
 
 func sortFindings(findings []model.Finding) {

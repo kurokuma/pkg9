@@ -109,6 +109,8 @@ type Summary struct {
 	ErrorsTotal          int            `json:"errors_total"`
 	SeverityCounts       map[string]int `json:"severity_counts"`
 	SkipReasonCounts     map[string]int `json:"skip_reason_counts"`
+	RiskScore            int            `json:"risk_score"`
+	RiskLevel            string         `json:"risk_level"`
 }
 
 type ScanMetadata struct {
