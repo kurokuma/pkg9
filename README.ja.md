@@ -135,7 +135,7 @@ go run ./cmd/scanner rules list --rules-dir ./rules
 
 ## 組み込みルール
 
-現在の built-in ルールは [rules/builtin](/Users/nanoha/work/pkg9/rules/builtin) にあります。
+現在の built-in ルールは [rules/builtin](./rules/builtin) にあります。
 
 主なカバレッジ:
 
@@ -153,8 +153,8 @@ go run ./cmd/scanner rules list --rules-dir ./rules
 
 ルールは YAML で定義し、次のディレクトリからロードします。
 
-- [rules/builtin](/Users/nanoha/work/pkg9/rules/builtin)
-- [rules/custom](/Users/nanoha/work/pkg9/rules/custom)
+- [rules/builtin](./rules/builtin)
+- [rules/custom](./rules/custom)
 
 現在のルールモデル:
 

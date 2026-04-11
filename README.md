@@ -135,7 +135,7 @@ The scanner emits JSON with this top-level structure:
 
 ## Built-in Rules
 
-Current built-in rules are stored in [rules/builtin](/Users/nanoha/work/pkg9/rules/builtin).
+Current built-in rules are stored in [rules/builtin](./rules/builtin).
 
 Current coverage includes:
 
@@ -153,8 +153,8 @@ Current coverage includes:
 
 Rules are defined in YAML and loaded from:
 
-- [rules/builtin](/Users/nanoha/work/pkg9/rules/builtin)
-- [rules/custom](/Users/nanoha/work/pkg9/rules/custom)
+- [rules/builtin](./rules/builtin)
+- [rules/custom](./rules/custom)
 
 Current rule model supports:
 
