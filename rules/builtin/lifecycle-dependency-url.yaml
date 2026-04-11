@@ -1,0 +1,33 @@
+metadata:
+  id: package.dependency_url
+  name: Suspicious Dependency URL
+  description: Detects dependencies pinned to raw HTTP URLs or tunnel/private hosts.
+  severity: high
+  confidence: high
+  tags: [dependency, url]
+  category: dependency
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://docs.npmjs.com/cli/v9/configuring-npm/package-json#urls-as-dependencies
+scope: file
+selectors:
+  ecosystems: [npm]
+  path_glob: ["package.json"]
+conditions:
+  any_of:
+    - regex:
+        pattern: '(?is)"[^"]+"\s*:\s*"https?://[^"]+"'
+    - regex:
+        pattern: '(?is)"[^"]+"\s*:\s*"https?://[^"]*(?:ngrok|localtunnel|localhost|127\.0\.0\.1|0\.0\.0\.0|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})[^"]*"'
+emit:
+  finding_name: dependency_url
+  message: package.json declares a dependency via a direct HTTP URL or suspicious tunnel/private host.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://docs.npmjs.com/cli/v9/configuring-npm/package-json#urls-as-dependencies
+  remediation_hint: Replace the URL dependency with a verified registry version.

@@ -1,0 +1,29 @@
+metadata:
+  id: source.sensitive_string_reference
+  name: Sensitive String Reference
+  description: Detects references to sensitive credential files and paths in source.
+  severity: high
+  confidence: medium
+  tags: [source, credentials]
+  category: credential-access
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://github.com/DNSZLSK/muad-dib/blob/master/src/rules/index.js
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  regex:
+    pattern: '(?i)(?:\.npmrc|\.ssh|\.aws|(?:^|[/"''\s])\.env\b|id_rsa|known_hosts)'
+emit:
+  finding_name: sensitive_string_reference
+  message: Source file references a sensitive credential path or file.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1552.001/
+  remediation_hint: Review whether credential files are being accessed or exfiltrated.

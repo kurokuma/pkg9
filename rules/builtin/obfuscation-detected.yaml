@@ -1,0 +1,28 @@
+metadata:
+  id: obfuscation.detected
+  name: Code Obfuscation Detected
+  description: Detects obfuscation indicators outside minified JavaScript.
+  severity: high
+  confidence: medium
+  tags: [obfuscation]
+  category: obfuscation
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://github.com/DNSZLSK/muad-dib/blob/master/src/rules/index.js
+scope: package
+selectors:
+  required_scanners: [obfuscation_detected]
+conditions:
+  scanner_signal_exists: obfuscation_detected
+emit:
+  finding_name: obfuscation_detected
+  message: Package contains one or more files with obfuscation indicators.
+  evidence_fields: []
+  context_strategy: package
+  references:
+    - https://attack.mitre.org/techniques/T1027/
+  remediation_hint: Review the obfuscated file and decode hidden payloads before use.

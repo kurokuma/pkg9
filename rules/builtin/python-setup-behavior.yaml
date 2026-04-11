@@ -1,0 +1,25 @@
+metadata:
+  id: python.setup_behavior
+  name: Python Setup Behavior
+  description: Detects setup.py or pyproject entrypoint packaging behavior.
+  severity: medium
+  confidence: medium
+  tags: [python, setup]
+  category: packaging
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+scope: package
+selectors:
+  required_scanners: [python_setup_behavior]
+conditions:
+  scanner_signal_exists: python_setup_behavior
+emit:
+  finding_name: python_setup_behavior
+  message: Python packaging metadata defines setup or entrypoint behavior worth reviewing.
+  evidence_fields: []
+  context_strategy: package
+  references: []
+  remediation_hint: Review package entrypoints and setup hooks for unexpected execution.

@@ -1,0 +1,30 @@
+metadata:
+  id: package.lifecycle_child_process
+  name: Child Process in Lifecycle Script
+  description: Detects child_process references in lifecycle scripts.
+  severity: high
+  confidence: medium
+  tags: [npm, lifecycle, child_process]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://github.com/DNSZLSK/muad-dib/blob/master/src/rules/index.js
+scope: file
+selectors:
+  ecosystems: [npm]
+  path_glob: ["package.json"]
+conditions:
+  regex:
+    pattern: '(?is)"(?:preinstall|install|postinstall|prepare|prepack)"\s*:\s*"[^"\n]*child_process'
+emit:
+  finding_name: lifecycle_child_process
+  message: package.json lifecycle script references child_process.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://owasp.org/www-community/attacks/Command_Injection
+  remediation_hint: Review whether subprocess execution is necessary.

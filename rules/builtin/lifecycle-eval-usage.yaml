@@ -1,0 +1,30 @@
+metadata:
+  id: package.lifecycle_eval_usage
+  name: Eval in Lifecycle Script
+  description: Detects eval usage inside lifecycle scripts.
+  severity: high
+  confidence: medium
+  tags: [npm, lifecycle, eval]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://owasp.org/www-community/attacks/Command_Injection
+scope: file
+selectors:
+  ecosystems: [npm]
+  path_glob: ["package.json"]
+conditions:
+  regex:
+    pattern: '(?is)"(?:preinstall|install|postinstall|prepare|prepack)"\s*:\s*"[^"\n]*\beval\s*\('
+emit:
+  finding_name: lifecycle_eval_usage
+  message: package.json lifecycle script uses eval or equivalent dynamic execution.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://owasp.org/www-community/attacks/Command_Injection
+  remediation_hint: Remove dynamic execution from lifecycle scripts.

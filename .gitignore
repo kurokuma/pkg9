@@ -1,0 +1,18 @@
+# Go build artifacts
+/scanner
+/scanner.exe
+*.test
+*.out
+coverage.out
+
+# Local caches
+/.cache/
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
+*.swo

@@ -1,0 +1,25 @@
+metadata:
+  id: ast.dangerous_exec
+  name: AST Dangerous Exec
+  description: Detects JavaScript AST calls to dangerous process execution APIs.
+  severity: high
+  confidence: high
+  tags: [ast, exec]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+scope: package
+selectors:
+  required_scanners: [ast_dangerous_exec]
+conditions:
+  scanner_signal_exists: ast_dangerous_exec
+emit:
+  finding_name: ast_dangerous_exec
+  message: JavaScript AST contains dangerous process execution calls.
+  evidence_fields: []
+  context_strategy: package
+  references: []
+  remediation_hint: Review exec/spawn usage and command sources.

@@ -1,0 +1,28 @@
+metadata:
+  id: pkg.npm.install_hook
+  name: npm install hook present
+  description: Detects packages with install lifecycle hooks.
+  severity: medium
+  confidence: high
+  tags: [supply-chain, lifecycle]
+  category: persistence
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references: []
+scope: package
+selectors:
+  ecosystems: [npm]
+conditions:
+  field_equals:
+    field: canonical_package.has_install_hook
+    value: "true"
+emit:
+  finding_name: install_hook_detected
+  message: Package defines an install lifecycle hook.
+  evidence_fields: [canonical_package.hooks]
+  context_strategy: package
+  references: []
+  remediation_hint: Review install script behavior before trusting the package.

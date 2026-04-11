@@ -1,0 +1,25 @@
+metadata:
+  id: python.requirements_remote
+  name: Python Remote Requirement
+  description: Detects remote URL requirements in requirements files.
+  severity: high
+  confidence: high
+  tags: [python, requirements, url]
+  category: dependency
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+scope: package
+selectors:
+  required_scanners: [python_requirements_remote]
+conditions:
+  scanner_signal_exists: python_requirements_remote
+emit:
+  finding_name: python_requirements_remote
+  message: requirements file contains a remote URL dependency.
+  evidence_fields: []
+  context_strategy: package
+  references: []
+  remediation_hint: Replace the remote requirement with a pinned registry package when possible.

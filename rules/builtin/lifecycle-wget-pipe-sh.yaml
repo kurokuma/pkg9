@@ -1,0 +1,30 @@
+metadata:
+  id: package.lifecycle_wget_pipe_sh
+  name: Wget Pipe to Shell in Lifecycle Script
+  description: Detects lifecycle scripts that use wget piped to a shell.
+  severity: critical
+  confidence: high
+  tags: [npm, lifecycle, shell]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://github.com/DNSZLSK/muad-dib/blob/master/src/rules/index.js
+scope: file
+selectors:
+  ecosystems: [npm]
+  path_glob: ["package.json"]
+conditions:
+  regex:
+    pattern: '(?is)"(?:preinstall|install|postinstall|prepare|prepack)"\s*:\s*"[^"\n]*wget[^"\n|]{0,400}\|[^"\n]{0,200}(?:sh|bash)'
+emit:
+  finding_name: lifecycle_wget_pipe_sh
+  message: package.json lifecycle script contains a wget-to-shell pattern.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://blog.phylum.io/shai-hulud-npm-worm/
+  remediation_hint: Remove the remote execution pattern and review the package lifecycle script.

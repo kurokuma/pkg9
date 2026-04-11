@@ -1,0 +1,25 @@
+metadata:
+  id: python.exec_behavior
+  name: Python Exec Behavior
+  description: Detects Python dynamic execution or subprocess behavior.
+  severity: high
+  confidence: high
+  tags: [python, exec]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+scope: package
+selectors:
+  required_scanners: [python_exec_behavior]
+conditions:
+  scanner_signal_exists: python_exec_behavior
+emit:
+  finding_name: python_exec_behavior
+  message: Python code uses dynamic execution or subprocess APIs.
+  evidence_fields: []
+  context_strategy: package
+  references: []
+  remediation_hint: Review subprocess and eval-like behavior in Python packaging code.

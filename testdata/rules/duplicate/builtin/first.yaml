@@ -1,0 +1,25 @@
+metadata:
+  id: duplicate.rule
+  name: first
+  description: first rule
+  severity: low
+  confidence: low
+  tags: []
+  category: test
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references: []
+scope: package
+selectors: {}
+conditions:
+  field_exists: canonical_package.name
+emit:
+  finding_name: first
+  message: first
+  evidence_fields: []
+  context_strategy: package
+  references: []
+  remediation_hint: ""

@@ -1,0 +1,30 @@
+metadata:
+  id: package.lifecycle_base64
+  name: Base64 in Lifecycle Script
+  description: Detects base64 usage in package lifecycle scripts.
+  severity: medium
+  confidence: low
+  tags: [npm, lifecycle, base64]
+  category: obfuscation
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://github.com/DNSZLSK/muad-dib/blob/master/src/rules/index.js
+scope: file
+selectors:
+  ecosystems: [npm]
+  path_glob: ["package.json"]
+conditions:
+  regex:
+    pattern: '(?is)"(?:preinstall|install|postinstall|prepare|prepack)"\s*:\s*"[^"\n]*base64'
+emit:
+  finding_name: lifecycle_base64
+  message: package.json lifecycle script contains base64 usage.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1027/
+  remediation_hint: Review whether the base64 usage hides downloaded or dynamically generated code.

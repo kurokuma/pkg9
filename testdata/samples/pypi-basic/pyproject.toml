@@ -1,0 +1,8 @@
+[project]
+name = "pypi-basic"
+version = "0.1.0"
+description = "sample python package"
+dependencies = ["requests-oauthlib-malicious>=1.0.0"]
+
+[project.scripts]
+demo = "demo:main"

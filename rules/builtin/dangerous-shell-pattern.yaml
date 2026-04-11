@@ -1,0 +1,40 @@
+metadata:
+  id: shell.dangerous_pattern
+  name: Dangerous Shell Pattern
+  description: Detects payload download, reverse shell, exfiltration, or destructive shell patterns.
+  severity: critical
+  confidence: high
+  tags: [shell, execution]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/scanner/shell.js
+scope: file
+selectors:
+  path_glob: ["*.sh", "*.bash", "*.zsh", "*.js", "*.mjs", "*.cjs", "*.py"]
+conditions:
+  any_of:
+    - regex:
+        pattern: '(?is)curl[^\n]{0,800}\|[^\n]{0,800}(?:sh|bash)'
+    - regex:
+        pattern: '(?is)wget[^\n]{0,800}&&[^\n]{0,800}chmod[^\n]{0,800}\+x'
+    - regex:
+        pattern: '(?is)\b(?:bash\s+-i\s+>&\s*/dev/tcp|nc\s+-e\s+/bin/(?:ba)?sh|python[23]?\s+-c.*import\s+socket|perl\s+-e.*socket|mkfifo.*(?:/dev/tcp|\|\s*nc\s))'
+    - regex:
+        pattern: '(?is)\b(?:rm\s+-rf\s+(?:~/|\$HOME|/home)|shred.*\$HOME|rm\s+-rf\s+/\s*(?:--no-preserve-root|\s|$|;|\|))'
+    - regex:
+        pattern: '(?is)base64\s+-d\b.*\|\s*(?:ba)?sh'
+    - regex:
+        pattern: '(?is)curl[^\n]{0,800}-X\s*POST[^\n]{0,800}-d'
+emit:
+  finding_name: dangerous_shell_pattern
+  message: File contains a dangerous shell or payload execution pattern.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1059/
+  remediation_hint: Review the command sequence for payload download, exfiltration, persistence, or destructive behavior.

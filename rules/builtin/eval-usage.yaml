@@ -1,0 +1,30 @@
+metadata:
+  id: source.eval_usage
+  name: Eval Usage
+  description: Detects eval or new Function usage in source files.
+  severity: high
+  confidence: high
+  tags: [source, eval]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://github.com/DNSZLSK/muad-dib/blob/master/src/rules/index.js
+scope: file
+selectors:
+  classifications: [source]
+  languages: [javascript, python]
+conditions:
+  regex:
+    pattern: '(?i)\b(?:eval\s*\(|new\s+Function\s*\()'
+emit:
+  finding_name: eval_usage
+  message: Source file uses eval or new Function.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval#never_use_eval!
+  remediation_hint: Remove dynamic code execution or constrain it to trusted, static input.

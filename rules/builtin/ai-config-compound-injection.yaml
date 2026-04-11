@@ -1,0 +1,28 @@
+metadata:
+  id: ai_config.compound_injection
+  name: AI Config Compound Injection
+  description: Detects AI config prompt injection with execution or exfiltration behavior.
+  severity: critical
+  confidence: high
+  tags: [ai-config, prompt-injection, exfiltration]
+  category: ai-config
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://github.com/DNSZLSK/muad-dib/blob/master/src/rules/index.js
+scope: package
+selectors:
+  required_scanners: [ai_config_injection]
+conditions:
+  scanner_signal_exists: ai_config_injection
+emit:
+  finding_name: ai_config_compound_injection
+  message: Package contains AI config prompt-injection indicators.
+  evidence_fields: []
+  context_strategy: package
+  references:
+    - https://snyk.io/blog/clinejection-ai-config-prompt-injection/
+  remediation_hint: Remove repository-controlled AI instructions that request shell execution or secret access.

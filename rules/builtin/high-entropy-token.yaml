@@ -1,0 +1,26 @@
+metadata:
+  id: pkg.file.high_entropy
+  name: high entropy token
+  description: Detects high entropy strings in source files.
+  severity: low
+  confidence: medium
+  tags: [obfuscation]
+  category: obfuscation
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references: []
+scope: package
+selectors:
+  required_scanners: [entropy_high]
+conditions:
+  scanner_signal_exists: entropy_high
+emit:
+  finding_name: entropy_signal_detected
+  message: Scanner detected at least one high entropy token in the package.
+  evidence_fields: []
+  context_strategy: package
+  references: []
+  remediation_hint: Review encoded or obfuscated strings.

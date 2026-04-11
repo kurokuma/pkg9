@@ -1,0 +1,27 @@
+metadata:
+  id: dependency.typosquat_detected
+  name: Typosquatting Detected
+  description: Detects dependencies with names one edit away from common packages.
+  severity: high
+  confidence: medium
+  tags: [dependency, typosquat]
+  category: dependency
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://snyk.io/blog/typosquatting-attacks/
+scope: package
+selectors:
+  required_scanners: [typosquat_detected]
+conditions:
+  scanner_signal_exists: typosquat_detected
+emit:
+  finding_name: typosquat_detected
+  message: Package declares a dependency whose name resembles a popular package closely.
+  evidence_fields: []
+  context_strategy: package
+  references: []
+  remediation_hint: Verify the dependency name and publisher before installation.

@@ -1,0 +1,25 @@
+metadata:
+  id: python.network_behavior
+  name: Python Network Behavior
+  description: Detects Python networking APIs in package source or setup code.
+  severity: high
+  confidence: medium
+  tags: [python, network]
+  category: behavior
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+scope: package
+selectors:
+  required_scanners: [python_network_behavior]
+conditions:
+  scanner_signal_exists: python_network_behavior
+emit:
+  finding_name: python_network_behavior
+  message: Python code uses networking APIs that may send or fetch external data.
+  evidence_fields: []
+  context_strategy: package
+  references: []
+  remediation_hint: Review whether the network behavior is expected for package install or import time.

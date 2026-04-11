@@ -1,0 +1,11 @@
+{
+  "name": "npm-basic",
+  "version": "1.0.0",
+  "description": "sample npm package",
+  "scripts": {
+    "postinstall": "node install.js"
+  },
+  "dependencies": {
+    "node-ipc-malicious": "1.0.0"
+  }
+}

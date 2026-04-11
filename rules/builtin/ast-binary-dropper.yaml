@@ -1,0 +1,27 @@
+metadata:
+  id: ast.binary_dropper
+  name: AST Binary Dropper
+  description: Detects JavaScript AST patterns that write probable binary droppers.
+  severity: critical
+  confidence: high
+  tags: [ast, dropper]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://github.com/DNSZLSK/muad-dib/blob/master/src/rules/index.js
+scope: package
+selectors:
+  required_scanners: [ast_binary_dropper]
+conditions:
+  scanner_signal_exists: ast_binary_dropper
+emit:
+  finding_name: ast_binary_dropper
+  message: JavaScript AST indicates writing a probable binary dropper.
+  evidence_fields: []
+  context_strategy: package
+  references: []
+  remediation_hint: Review file write targets and downloaded payload handling.

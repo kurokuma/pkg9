@@ -1,0 +1,27 @@
+metadata:
+  id: intent.coherence
+  name: Suspicious Intent Coherence
+  description: Detects a file that both reads credentials and evaluates or sends data.
+  severity: critical
+  confidence: high
+  tags: [intent, dataflow]
+  category: behavior
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://github.com/DNSZLSK/muad-dib/blob/master/src/rules/index.js
+scope: package
+selectors:
+  required_scanners: [intent_coherence]
+conditions:
+  scanner_signal_exists: intent_coherence
+emit:
+  finding_name: intent_coherence
+  message: Package contains a file with both sensitive source access and dynamic execution or network sink behavior.
+  evidence_fields: []
+  context_strategy: package
+  references: []
+  remediation_hint: Review the affected file for credential theft or payload staging.

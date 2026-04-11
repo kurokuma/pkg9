@@ -1,0 +1,27 @@
+metadata:
+  id: hash.ioc_match
+  name: Known Malicious Hash Match
+  description: Detects file hashes that match the built-in malicious hash IOC set.
+  severity: critical
+  confidence: high
+  tags: [hash, ioc]
+  category: ioc
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://www.virustotal.com/
+scope: package
+selectors:
+  required_scanners: [hash_ioc_match]
+conditions:
+  scanner_signal_exists: hash_ioc_match
+emit:
+  finding_name: hash_ioc_match
+  message: Package contains a file with a known malicious hash IOC.
+  evidence_fields: []
+  context_strategy: package
+  references: []
+  remediation_hint: Remove or quarantine the matching file and review the package origin.

@@ -1,0 +1,25 @@
+metadata:
+  id: ast.prototype_hook
+  name: AST Prototype Hook
+  description: Detects JavaScript AST modifications to prototypes.
+  severity: high
+  confidence: medium
+  tags: [ast, prototype]
+  category: behavior
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+scope: package
+selectors:
+  required_scanners: [ast_prototype_hook]
+conditions:
+  scanner_signal_exists: ast_prototype_hook
+emit:
+  finding_name: ast_prototype_hook
+  message: JavaScript AST modifies object prototypes.
+  evidence_fields: []
+  context_strategy: package
+  references: []
+  remediation_hint: Review whether prototype mutation is legitimate or a hook for interception.
