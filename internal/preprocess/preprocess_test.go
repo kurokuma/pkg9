@@ -29,6 +29,9 @@ func TestIsMostlyPrintable(t *testing.T) {
 	if !isMostlyPrintable("plain text\nwith line") {
 		t.Fatal("expected printable text to be accepted")
 	}
+	if isMostlyPrintable(" \n\t ") {
+		t.Fatal("expected whitespace-only text to be rejected")
+	}
 	if isMostlyPrintable(string([]byte{0x00, 0x01, 0x02, 0x03})) {
 		t.Fatal("expected binary-like text to be rejected")
 	}

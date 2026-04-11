@@ -136,11 +136,15 @@ func isMostlyPrintable(s string) bool {
 	if len(s) == 0 {
 		return false
 	}
+	trimmed := strings.TrimSpace(s)
+	if len(trimmed) == 0 {
+		return false
+	}
 	printable := 0
 	for _, r := range s {
 		if r == '\n' || r == '\t' || (r >= 32 && r < 127) {
 			printable++
 		}
 	}
-	return printable*100/len(strings.TrimSpace(s)) >= 80
+	return printable*100/len(trimmed) >= 80
 }
