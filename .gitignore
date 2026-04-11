@@ -26,6 +26,7 @@ Thumbs.db
 # downloaded sample packages
 /mal-package-downloader/dl/
 /mal-package-downloader/npm_mal_list.txt
+/pkg9-bulk-out/
 /mal-package-downloader/pypi_mal_list.txt
 
 *.pyc
