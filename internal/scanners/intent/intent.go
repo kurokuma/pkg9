@@ -330,6 +330,9 @@ func (s *jsFlowState) walkExpr(expr jsast.Expression) {
 		for _, prop := range n.Value {
 			switch p := prop.(type) {
 			case *jsast.PropertyKeyed:
+				if key := jsExprName(p.Key); key != "" && (s.exprUsesTainted(p.Value) || s.exprIsSource(p.Value) || s.callReturnsTaint(p.Value)) {
+					s.markTainted(key)
+				}
 				if fn, ok := p.Value.(*jsast.FunctionLiteral); ok {
 					s.recordFunction(jsExprName(p.Key), fn)
 				}
@@ -479,12 +482,14 @@ func summarizeFunction(fn *jsast.FunctionLiteral) funcSummary {
 		return summary
 	}
 	params := map[string]struct{}{}
+	tainted := map[string]struct{}{}
 	for _, binding := range fn.ParameterList.List {
 		if binding == nil {
 			continue
 		}
 		if id, ok := binding.Target.(*jsast.Identifier); ok {
 			params[id.Name.String()] = struct{}{}
+			tainted[id.Name.String()] = struct{}{}
 		}
 	}
 	var walkStmt func(jsast.Statement)
@@ -492,7 +497,7 @@ func summarizeFunction(fn *jsast.FunctionLiteral) funcSummary {
 	walkExpr = func(expr jsast.Expression) bool {
 		switch n := expr.(type) {
 		case *jsast.Identifier:
-			_, ok := params[n.Name.String()]
+			_, ok := tainted[n.Name.String()]
 			return ok
 		case *jsast.CallExpression:
 			name := strings.ToLower(jsExprName(n.Callee))
@@ -506,14 +511,33 @@ func summarizeFunction(fn *jsast.FunctionLiteral) funcSummary {
 		case *jsast.BinaryExpression:
 			return walkExpr(n.Left) || walkExpr(n.Right)
 		case *jsast.DotExpression:
+			if _, ok := tainted[jsExprName(n)]; ok {
+				return true
+			}
 			return walkExpr(n.Left)
 		case *jsast.BracketExpression:
 			return walkExpr(n.Left) || walkExpr(n.Member)
+		case *jsast.AssignExpression:
+			taintedValue := walkExpr(n.Right)
+			switch left := n.Left.(type) {
+			case *jsast.Identifier:
+				if taintedValue {
+					tainted[left.Name.String()] = struct{}{}
+				}
+			case *jsast.DotExpression:
+				if taintedValue {
+					tainted[jsExprName(left)] = struct{}{}
+				}
+			}
+			return taintedValue
 		case *jsast.ObjectLiteral:
 			for _, prop := range n.Value {
 				switch p := prop.(type) {
 				case *jsast.PropertyKeyed:
 					if walkExpr(p.Value) {
+						if key := jsExprName(p.Key); key != "" {
+							tainted[key] = struct{}{}
+						}
 						return true
 					}
 				case *jsast.PropertyShort:
@@ -533,6 +557,28 @@ func summarizeFunction(fn *jsast.FunctionLiteral) funcSummary {
 			}
 		case *jsast.ExpressionStatement:
 			walkExpr(n.Expression)
+		case *jsast.VariableStatement:
+			for _, binding := range n.List {
+				if binding == nil || binding.Initializer == nil {
+					continue
+				}
+				if walkExpr(binding.Initializer) {
+					if target, ok := binding.Target.(*jsast.Identifier); ok {
+						tainted[target.Name.String()] = struct{}{}
+					}
+				}
+			}
+		case *jsast.LexicalDeclaration:
+			for _, binding := range n.List {
+				if binding == nil || binding.Initializer == nil {
+					continue
+				}
+				if walkExpr(binding.Initializer) {
+					if target, ok := binding.Target.(*jsast.Identifier); ok {
+						tainted[target.Name.String()] = struct{}{}
+					}
+				}
+			}
 		case *jsast.ReturnStatement:
 			if n.Argument != nil && walkExpr(n.Argument) {
 				summary.returnsTaint = true

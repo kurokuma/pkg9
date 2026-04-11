@@ -18,7 +18,7 @@ English README: [README.md](./README.md)
 - deobfuscation preprocessing
 - JavaScript の AST ベース検知
 - Python の AST / packaging 対応スキャン
-- intent / inter-module dataflow lite
+- AST 補助の intent / inter-module dataflow
 - obfuscation、AI config、typosquat、entropy、lifecycle、hash scanner
 
 ## ディレクトリ構成
@@ -159,7 +159,7 @@ baseline 運用の例:
 - `typosquat`: 依存関係名の typo-squatting 候補を検出
 - `obfuscation`: minified 以外の難読化指標を検出
 - `ai_config`: AI 設定ファイルの prompt injection を検出
-- `intent_dataflow`: source-sink の intent coherence と cross-file flow lite を検出
+- `intent_dataflow`: source-sink の intent coherence、alias 伝播、wrapper method、local cross-file call edge を検出
 - `js_ast`: JavaScript AST から eval、exec、credential access、dropper、prototype hook を検出
 - `python`: Python source / packaging から exec、credential、network、setup、remote requirements を検出
 
@@ -226,10 +226,10 @@ GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go test ./...
 
 ## ステータス
 
-これはまだ基盤実装ですが、JavaScript AST scanning、Python AST-assisted scanning、deobfuscation preprocessing、AI config scanning、typosquat detection、複数 ecosystem の package parsing、richer matcher、baseline ベースの suppression、heuristic な intra/inter-file dataflow、risk scoring の上に乗る prioritization layer まで入っています。
+これはまだ基盤実装ですが、JavaScript AST scanning、Python AST-assisted scanning、deobfuscation preprocessing、AI config scanning、typosquat detection、複数 ecosystem の package parsing、richer matcher、baseline ベースの suppression、alias / property を追う強化版の intra/inter-file dataflow、risk scoring の上に乗る prioritization layer まで入っています。
 
 ## 現在の制約
 
-- JavaScript / Python の dataflow は AST ベースですが、SSA / CFG 完備の解析ではなく heuristic です。
-- cross-file 解決は import graph、wrapper method、local call edge までで、動的 import や reflection の全パターンは扱いません。
+- JavaScript / Python の dataflow は、local alias、再代入、object/dict property flow、wrapper method、単純な call edge を追いますが、SSA / CFG 完備の解析ではなく heuristic です。
+- cross-file 解決は import graph、imported wrapper、local call edge までで、動的 import や reflection、実行時 dispatch の全パターンは扱いません。
 - 大規模な IOC / threat-intel dataset は、明示的に追加しない限り対象外です。

@@ -18,7 +18,7 @@ Japanese README: [README.ja.md](./README.ja.md)
 - Deobfuscation preprocessing
 - AST-based JavaScript scanning
 - AST-based and packaging-aware Python scanning
-- Intent and inter-module dataflow lite
+- AST-assisted intent and inter-module dataflow
 - Obfuscation, AI config, typosquat, entropy, lifecycle, and hash scanners
 
 ## Repository Layout
@@ -160,6 +160,7 @@ Baseline workflow:
 - `obfuscation`: detects obfuscation indicators outside minified JS
 - `ai_config`: detects prompt-injection style AI config files
 - `intent_dataflow`: detects source-sink intent coherence and cross-file flow lite
+- `intent_dataflow`: tracks source-sink coherence, alias propagation, wrapper methods, and local cross-file call edges
 - `js_ast`: parses JavaScript AST for eval, exec, credential access, droppers, and prototype hooks
 - `python`: scans Python source and packaging files for exec, credentials, network, setup, and remote requirements
 
@@ -226,10 +227,10 @@ GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go test ./...
 
 ## Status
 
-This is still a foundation implementation, but it now includes AST-based JavaScript scanning, Python AST-assisted scanning, deobfuscation preprocessing, AI config scanning, typosquat detection, multi-ecosystem package parsing, richer matcher primitives, baseline-driven suppression, heuristic intra/inter-file dataflow, and a prioritization layer on top of risk scoring.
+This is still a foundation implementation, but it now includes AST-based JavaScript scanning, Python AST-assisted scanning, deobfuscation preprocessing, AI config scanning, typosquat detection, multi-ecosystem package parsing, richer matcher primitives, baseline-driven suppression, stronger alias/property-aware intra/inter-file dataflow, and a prioritization layer on top of risk scoring.
 
 ## Current Limitations
 
-- The JavaScript and Python dataflow engines are AST-driven but still heuristic rather than SSA/CFG-complete.
-- Cross-file resolution covers import graphs, wrapper methods, and local call edges, but not every dynamic import or reflection pattern.
+- The JavaScript and Python dataflow engines now track local aliases, reassignment, object/dict property flow, wrapper methods, and simple call edges, but they are still heuristic rather than SSA/CFG-complete.
+- Cross-file resolution covers import graphs, imported wrappers, and local call edges, but not every dynamic import, reflection, or runtime-generated dispatch pattern.
 - Large curated IOC or threat-intel datasets remain intentionally out of scope unless explicitly added.

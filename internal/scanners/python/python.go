@@ -246,16 +246,43 @@ def source_expr(node):
 class FuncSummary(ast.NodeVisitor):
     def __init__(self, params):
         self.params = set(params)
+        self.tainted = set(params)
         self.param_to_sink = False
         self.returns_taint = False
 
     def expr_uses_param(self, node):
         if isinstance(node, ast.Name):
-            return node.id in self.params
+            return node.id in self.tainted
+        if isinstance(node, ast.Attribute):
+            return self.expr_uses_param(node.value)
+        if isinstance(node, ast.Subscript):
+            return self.expr_uses_param(node.value) or self.expr_uses_param(node.slice)
+        if isinstance(node, ast.Dict):
+            return any(self.expr_uses_param(k) for k in node.keys if k is not None) or any(self.expr_uses_param(v) for v in node.values)
         for child in ast.iter_child_nodes(node):
             if self.expr_uses_param(child):
                 return True
         return False
+
+    def mark_target(self, node):
+        if isinstance(node, ast.Name):
+            self.tainted.add(node.id)
+        elif isinstance(node, ast.Attribute):
+            self.tainted.add(full_name(node))
+        elif isinstance(node, (ast.Tuple, ast.List)):
+            for elt in node.elts:
+                self.mark_target(elt)
+
+    def visit_Assign(self, node):
+        if self.expr_uses_param(node.value):
+            for target in node.targets:
+                self.mark_target(target)
+        self.generic_visit(node)
+
+    def visit_AnnAssign(self, node):
+        if node.value is not None and self.expr_uses_param(node.value):
+            self.mark_target(node.target)
+        self.generic_visit(node)
 
     def visit_Call(self, node):
         name = full_name(node.func).lower()
@@ -287,6 +314,8 @@ class Analyzer(ast.NodeVisitor):
     def mark_target(self, target):
         if isinstance(target, ast.Name):
             self.tainted.add(target.id)
+        elif isinstance(target, ast.Attribute):
+            self.tainted.add(full_name(target))
         elif isinstance(target, (ast.Tuple, ast.List)):
             for elt in target.elts:
                 self.mark_target(elt)
@@ -294,6 +323,12 @@ class Analyzer(ast.NodeVisitor):
     def expr_uses_taint(self, node):
         if isinstance(node, ast.Name):
             return node.id in self.tainted
+        if isinstance(node, ast.Attribute):
+            return full_name(node) in self.tainted or self.expr_uses_taint(node.value)
+        if isinstance(node, ast.Subscript):
+            return self.expr_uses_taint(node.value) or self.expr_uses_taint(node.slice)
+        if isinstance(node, ast.Dict):
+            return any(self.expr_uses_taint(k) for k in node.keys if k is not None) or any(self.expr_uses_taint(v) for v in node.values)
         if isinstance(node, ast.Call):
             name = full_name(node.func)
             if name in self.funcs and self.funcs[name]["returns_taint"]:
@@ -317,6 +352,13 @@ class Analyzer(ast.NodeVisitor):
             self.credential_access = self.credential_access or source_expr(node.value)
             for target in node.targets:
                 self.mark_target(target)
+        self.generic_visit(node)
+
+    def visit_AnnAssign(self, node):
+        if node.value is not None and (source_expr(node.value) or self.expr_uses_taint(node.value)):
+            self.has_source = True
+            self.credential_access = self.credential_access or source_expr(node.value)
+            self.mark_target(node.target)
         self.generic_visit(node)
 
     def visit_Call(self, node):
