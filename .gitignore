@@ -25,10 +25,8 @@ Thumbs.db
 
 # downloaded sample packages
 /mal-package-downloader/dl/
+/mal-package-downloader/npm_mal_list.txt
+/mal-package-downloader/pypi_mal_list.txt
 
 *.pyc
 __pycache__/
-
-
-npm_mal_list.txt
-pypi_mal_list.txt
