@@ -86,6 +86,12 @@ func TestScanMuaddibDangerousSample(t *testing.T) {
 	if result.Summary.RiskLevel != "CRITICAL" {
 		t.Fatalf("expected CRITICAL risk level, got %s", result.Summary.RiskLevel)
 	}
+	if result.Summary.Priority != "P1" && result.Summary.Priority != "P2" {
+		t.Fatalf("expected high priority, got %s", result.Summary.Priority)
+	}
+	if len(result.Summary.RiskFactors) == 0 {
+		t.Fatal("expected risk factors")
+	}
 }
 
 func TestScanPyPIDangerousSample(t *testing.T) {
@@ -160,5 +166,26 @@ func TestScanWithBaselineSuppressesFindings(t *testing.T) {
 	}
 	if result.Summary.RiskLevel != "SAFE" {
 		t.Fatalf("expected SAFE risk level, got %s", result.Summary.RiskLevel)
+	}
+	if result.Summary.Priority != "P5" {
+		t.Fatalf("expected P5 priority, got %s", result.Summary.Priority)
+	}
+}
+
+func TestScanGoModSample(t *testing.T) {
+	engine := NewEngine("test")
+	root := filepath.Join("..", "..", "testdata", "samples", "gomod-basic")
+	result, err := engine.Scan(context.Background(), ScanRequest{
+		Path:      root,
+		RulesRoot: filepath.Join("..", "..", "rules"),
+	})
+	if err != nil {
+		t.Fatalf("scan failed: %v", err)
+	}
+	if result.ScanMetadata.Ecosystem != "gomod" {
+		t.Fatalf("expected gomod ecosystem, got %s", result.ScanMetadata.Ecosystem)
+	}
+	if result.ScanMetadata.PackageName != "github.com/example/gomod-basic" {
+		t.Fatalf("unexpected package name: %s", result.ScanMetadata.PackageName)
 	}
 }

@@ -101,7 +101,7 @@ func normalizeText(s string) string {
 func classify(path string) string {
 	ext := strings.ToLower(filepath.Ext(path))
 	switch ext {
-	case ".js", ".ts", ".py", ".mjs", ".cjs":
+	case ".js", ".ts", ".py", ".mjs", ".cjs", ".go":
 		return "source"
 	case ".json", ".yaml", ".yml", ".toml", ".cfg", ".ini":
 		return "config"
@@ -120,7 +120,7 @@ func classify(path string) string {
 func isManifest(path string) bool {
 	base := filepath.Base(path)
 	switch base {
-	case "package.json", "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt":
+	case "package.json", "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "go.mod":
 		return true
 	}
 	return strings.HasPrefix(base, "requirements") && strings.HasSuffix(base, ".txt")
@@ -132,6 +132,8 @@ func languageHint(ext string) string {
 		return "javascript"
 	case ".py":
 		return "python"
+	case ".go":
+		return "go"
 	case ".yml", ".yaml":
 		return "yaml"
 	case ".toml":

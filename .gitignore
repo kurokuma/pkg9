@@ -16,3 +16,12 @@ Thumbs.db
 *.tmp
 *.swp
 *.swo
+
+# package files
+*.tgz
+
+# local rule experiments
+/rules/cutom/
+
+# downloaded sample packages
+/mal-package-downloader/dl/

@@ -33,6 +33,8 @@ type astOutput struct {
 	HasSource    bool     `json:"has_source"`
 	HasSink      bool     `json:"has_sink"`
 	Imports      []string `json:"imports"`
+	CallEdges    []string `json:"call_edges"`
+	MethodToSink bool     `json:"method_to_sink"`
 	ExecBehavior bool     `json:"exec_behavior"`
 	Credential   bool     `json:"credential_access"`
 	Network      bool     `json:"network_behavior"`
@@ -180,9 +182,16 @@ func pythonReachesSink(path string, index map[string]astOutput, depth int, seen 
 	if info.HasSink && depth < 3 {
 		return true
 	}
+	for _, edge := range info.CallEdges {
+		for candidate, target := range index {
+			if pythonImportMatches(candidate, edge) && (target.HasSink || target.MethodToSink || pythonReachesSink(candidate, index, depth-1, seen)) {
+				return true
+			}
+		}
+	}
 	for _, imp := range info.Imports {
 		for candidate, target := range index {
-			if pythonImportMatches(candidate, imp) && (target.HasSink || pythonReachesSink(candidate, index, depth-1, seen)) {
+			if pythonImportMatches(candidate, imp) && (target.HasSink || target.MethodToSink || pythonReachesSink(candidate, index, depth-1, seen)) {
 				return true
 			}
 		}
@@ -270,6 +279,8 @@ class Analyzer(ast.NodeVisitor):
         self.setup_behavior = False
         self.intent = False
         self.imports = []
+        self.import_aliases = {}
+        self.call_edges = []
         self.tainted = set()
         self.funcs = {}
 
@@ -292,10 +303,13 @@ class Analyzer(ast.NodeVisitor):
     def visit_Import(self, node):
         for alias in node.names:
             self.imports.append(alias.name)
+            self.import_aliases[(alias.asname or alias.name).split(".")[0]] = alias.name
 
     def visit_ImportFrom(self, node):
         if node.module:
             self.imports.append(node.module)
+            for alias in node.names:
+                self.import_aliases[alias.asname or alias.name] = node.module
 
     def visit_Assign(self, node):
         if source_expr(node.value) or self.expr_uses_taint(node.value):
@@ -327,6 +341,17 @@ class Analyzer(ast.NodeVisitor):
                 self.has_source = True
                 self.has_sink = True
                 self.intent = True
+        if isinstance(node.func, ast.Attribute):
+            base = full_name(node.func.value).split(".")[0]
+            method = node.func.attr
+            if any(source_expr(arg) or self.expr_uses_taint(arg) for arg in node.args) or any(source_expr(k.value) or self.expr_uses_taint(k.value) for k in node.keywords):
+                if base in self.import_aliases:
+                    self.call_edges.append(self.import_aliases[base])
+                for name, summary in self.funcs.items():
+                    if (name == method or name.endswith("." + method)) and summary["param_to_sink"]:
+                        self.has_source = True
+                        self.has_sink = True
+                        self.intent = True
         self.generic_visit(node)
 
     def visit_Attribute(self, node):
@@ -366,6 +391,8 @@ for item in files:
         "has_source": analyzer.has_source,
         "has_sink": analyzer.has_sink,
         "imports": analyzer.imports,
+        "call_edges": analyzer.call_edges,
+        "method_to_sink": any(summary["param_to_sink"] for summary in analyzer.funcs.values()),
         "exec_behavior": analyzer.exec_behavior,
         "credential_access": analyzer.credential_access,
         "network_behavior": analyzer.network_behavior,

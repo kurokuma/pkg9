@@ -1,6 +1,6 @@
 # Malicious Package Scanner
 
-A rule-driven package scanner for unpacked npm and PyPI packages.
+A rule-driven package scanner for unpacked npm, PyPI, and Go module packages.
 
 This project is an extensible scanning foundation rather than a one-off checker. It analyzes package metadata, manifests, files, preprocessing artifacts, and scanner signals, then emits deterministic JSON findings.
 
@@ -9,7 +9,7 @@ Japanese README: [README.ja.md](./README.ja.md)
 ## Current Scope
 
 - CLI-based scanner
-- npm and PyPI adapters
+- npm, PyPI, and Go module adapters
 - YAML rule loading, validation, and execution
 - File, manifest, and package scopes
 - Structured JSON output for findings, warnings, errors, and optional artifacts
@@ -87,7 +87,7 @@ go run ./cmd/scanner rules -h
 
 Optional flags:
 
-- `--ecosystem npm|pypi`: force adapter selection
+- `--ecosystem npm|pypi|gomod`: force adapter selection
 - `--format json|sarif`: choose output format
 - `--include-artifacts`: include internal artifacts in JSON output
 - `--rules-dir ./rules`: change rule root directory
@@ -130,6 +130,8 @@ JSON output has this top-level structure:
 - `risk_score`
 - `risk_level`
 - `suppressed_findings`
+- `priority`
+- `risk_factors`
 
 Example SARIF output:
 
@@ -204,11 +206,15 @@ Current matcher set includes:
 - `regex`
 - `field_exists`
 - `field_equals`
+- `field_matches`
+- `field_in`
 - `manifest_key_exists`
 - `manifest_value_equals`
 - `path_matches`
 - `scanner_signal_exists`
+- `signal_count_at_least`
 - `artifact_match`
+- `artifact_field_equals`
 - logical nodes `all_of`, `any_of`, `not`
 
 ## Tests
@@ -220,14 +226,10 @@ GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go test ./...
 
 ## Status
 
-This is still a foundation implementation, but it now includes AST-based JavaScript scanning, Python AST-assisted scanning, deobfuscation preprocessing, AI config scanning, typosquat detection, lightweight intra/inter-file dataflow, heuristic risk scoring, SARIF output, and baseline-driven suppression. It is still not a full Semgrep- or CodeQL-class engine: deeper alias analysis, precise call graph resolution, stronger taint tracking, more ecosystems, and richer prioritization remain future work.
+This is still a foundation implementation, but it now includes AST-based JavaScript scanning, Python AST-assisted scanning, deobfuscation preprocessing, AI config scanning, typosquat detection, multi-ecosystem package parsing, richer matcher primitives, baseline-driven suppression, heuristic intra/inter-file dataflow, and a prioritization layer on top of risk scoring.
 
-## Not Yet Implemented
+## Current Limitations
 
-- Precise alias analysis and stronger taint propagation for JavaScript and Python
-- More complete call graph resolution across files and modules
-- More accurate inter-procedural and class/object method dataflow
-- Additional ecosystems beyond npm and PyPI
-- Richer matcher types beyond the current regex / field / scanner-assisted set
-- Richer scoring and prioritization layer
-- Large curated intelligence datasets are intentionally out of scope here unless explicitly added
+- The JavaScript and Python dataflow engines are AST-driven but still heuristic rather than SSA/CFG-complete.
+- Cross-file resolution covers import graphs, wrapper methods, and local call edges, but not every dynamic import or reflection pattern.
+- Large curated IOC or threat-intel datasets remain intentionally out of scope unless explicitly added.

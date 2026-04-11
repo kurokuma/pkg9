@@ -77,6 +77,18 @@ func evalNode(node rules.Condition, ctx EvalContext) MatchResult {
 		if value, ok := resolveField(node.FieldEquals.Field, ctx); ok && fmt.Sprint(value) == node.FieldEquals.Value {
 			return MatchResult{Matched: true, Why: []string{fmt.Sprintf("field_equals(%s)", node.FieldEquals.Field)}}
 		}
+	case node.FieldMatches != nil:
+		if value, ok := resolveField(node.FieldMatches.Field, ctx); ok && node.FieldMatches.Compiled != nil && node.FieldMatches.Compiled.MatchString(fmt.Sprint(value)) {
+			return MatchResult{Matched: true, Why: []string{fmt.Sprintf("field_matches(%s)", node.FieldMatches.Field)}, MatchedText: firstMatch(node.FieldMatches.Compiled, fmt.Sprint(value))}
+		}
+	case node.FieldIn != nil:
+		if value, ok := resolveField(node.FieldIn.Field, ctx); ok {
+			for _, candidate := range node.FieldIn.Values {
+				if fmt.Sprint(value) == candidate {
+					return MatchResult{Matched: true, Why: []string{fmt.Sprintf("field_in(%s)", node.FieldIn.Field)}, MatchedText: candidate}
+				}
+			}
+		}
 	case node.ManifestKeyExists != "":
 		if ctx.Manifest != nil {
 			if _, ok := ctx.Manifest.Raw[node.ManifestKeyExists]; ok {
@@ -100,6 +112,10 @@ func evalNode(node rules.Condition, ctx EvalContext) MatchResult {
 		if values := ctx.Signals[node.ScannerSignalExists]; len(values) > 0 {
 			return MatchResult{Matched: true, Why: []string{fmt.Sprintf("scanner_signal_exists(%s)", node.ScannerSignalExists)}, ContributingScanners: []string{node.ScannerSignalExists}}
 		}
+	case node.SignalCountAtLeast != nil:
+		if len(ctx.Signals[node.SignalCountAtLeast.ScannerID]) >= node.SignalCountAtLeast.Min {
+			return MatchResult{Matched: true, Why: []string{fmt.Sprintf("signal_count_at_least(%s,%d)", node.SignalCountAtLeast.ScannerID, node.SignalCountAtLeast.Min)}, ContributingScanners: []string{node.SignalCountAtLeast.ScannerID}}
+		}
 	case node.ArtifactMatch != nil:
 		for _, artifact := range ctx.Artifacts {
 			if artifact.ArtifactType != node.ArtifactMatch.ArtifactType {
@@ -107,6 +123,15 @@ func evalNode(node rules.Condition, ctx EvalContext) MatchResult {
 			}
 			if node.ArtifactMatch.Contains == "" || strings.Contains(strings.ToLower(fmt.Sprint(artifact.Value)), strings.ToLower(node.ArtifactMatch.Contains)) {
 				return MatchResult{Matched: true, Why: []string{fmt.Sprintf("artifact_match(%s)", node.ArtifactMatch.ArtifactType)}}
+			}
+		}
+	case node.ArtifactFieldEquals != nil:
+		for _, artifact := range ctx.Artifacts {
+			if artifact.ArtifactType != node.ArtifactFieldEquals.ArtifactType {
+				continue
+			}
+			if value, ok := resolveArtifactField(artifact, node.ArtifactFieldEquals.Field); ok && fmt.Sprint(value) == node.ArtifactFieldEquals.Value {
+				return MatchResult{Matched: true, Why: []string{fmt.Sprintf("artifact_field_equals(%s.%s)", node.ArtifactFieldEquals.ArtifactType, node.ArtifactFieldEquals.Field)}, MatchedText: fmt.Sprint(value)}
 			}
 		}
 	}
@@ -134,6 +159,32 @@ func resolveField(path string, ctx EvalContext) (any, bool) {
 		return ctx.Target.CanonicalPackage.Name, true
 	case "canonical_package.version":
 		return ctx.Target.CanonicalPackage.Version, true
+	case "canonical_package.repository":
+		return ctx.Target.CanonicalPackage.Repository, true
+	case "canonical_package.homepage":
+		return ctx.Target.CanonicalPackage.Homepage, true
+	case "canonical_package.license":
+		return ctx.Target.CanonicalPackage.License, true
+	case "scan_metadata.ecosystem":
+		return ctx.Target.Ecosystem, true
+	case "scan_metadata.package_name":
+		return ctx.Target.PackageName, true
+	}
+	return nil, false
+}
+
+func resolveArtifactField(artifact model.AnalysisArtifact, path string) (any, bool) {
+	switch path {
+	case "scope":
+		return artifact.Scope, true
+	case "file_path":
+		return artifact.FilePath, true
+	case "value":
+		return artifact.Value, true
+	}
+	if valueMap, ok := artifact.Value.(map[string]any); ok {
+		value, exists := valueMap[path]
+		return value, exists
 	}
 	return nil, false
 }

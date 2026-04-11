@@ -1,6 +1,6 @@
 # Malicious Package Scanner
 
-展開済みの npm / PyPI パッケージを対象にした、ルール駆動型のパッケージスキャナです。
+展開済みの npm / PyPI / Go module パッケージを対象にした、ルール駆動型のパッケージスキャナです。
 
 このプロジェクトは単発のチェッカーではなく、拡張可能なスキャン基盤として実装されています。パッケージメタデータ、manifest、ファイル、前処理 artifacts、scanner signals を解析し、再現性のある JSON finding を出力します。
 
@@ -9,7 +9,7 @@ English README: [README.md](./README.md)
 ## 現在の対応範囲
 
 - CLI ベースのスキャナ
-- npm / PyPI adapter
+- npm / PyPI / Go module adapter
 - YAML ルールのロード、検証、実行
 - file / manifest / package scope
 - findings / warnings / errors / optional artifacts の JSON 出力
@@ -87,7 +87,7 @@ go run ./cmd/scanner rules -h
 
 主なオプション:
 
-- `--ecosystem npm|pypi`: adapter を明示指定
+- `--ecosystem npm|pypi|gomod`: adapter を明示指定
 - `--format json|sarif`: 出力形式を指定
 - `--include-artifacts`: internal artifacts を JSON に含める
 - `--rules-dir ./rules`: ルールのルートディレクトリを変更
@@ -130,6 +130,8 @@ JSON のトップレベルは次の構造です。
 - `risk_score`
 - `risk_level`
 - `suppressed_findings`
+- `priority`
+- `risk_factors`
 
 SARIF の例:
 
@@ -204,11 +206,15 @@ baseline 運用の例:
 - `regex`
 - `field_exists`
 - `field_equals`
+- `field_matches`
+- `field_in`
 - `manifest_key_exists`
 - `manifest_value_equals`
 - `path_matches`
 - `scanner_signal_exists`
+- `signal_count_at_least`
 - `artifact_match`
+- `artifact_field_equals`
 - 論理ノード `all_of`, `any_of`, `not`
 
 ## テスト
@@ -220,14 +226,10 @@ GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go test ./...
 
 ## ステータス
 
-これはまだ基盤実装ですが、JavaScript AST scanning、Python AST-assisted scanning、deobfuscation preprocessing、AI config scanning、typosquat detection、軽量な intra/inter-file dataflow、heuristic risk scoring、SARIF 出力、baseline ベースの suppression まで入っています。一方で、より厳密な alias analysis、call graph 解決、taint tracking、ecosystem 追加、より高度な優先度付けなどは今後の実装対象です。
+これはまだ基盤実装ですが、JavaScript AST scanning、Python AST-assisted scanning、deobfuscation preprocessing、AI config scanning、typosquat detection、複数 ecosystem の package parsing、richer matcher、baseline ベースの suppression、heuristic な intra/inter-file dataflow、risk scoring の上に乗る prioritization layer まで入っています。
 
-## 未到達の項目
+## 現在の制約
 
-- JavaScript / Python のより厳密な alias analysis と taint propagation
-- file / module をまたぐ、より完全な call graph 解決
-- class / object method を含む、より正確な inter-procedural dataflow
-- npm / PyPI 以外の ecosystem 追加
-- 現在の regex / field / scanner-assisted 以外の richer matcher
-- より高度な scoring / 優先度付けレイヤ
-- 大規模な intelligence dataset は、明示的に追加しない限りこの実装の対象外
+- JavaScript / Python の dataflow は AST ベースですが、SSA / CFG 完備の解析ではなく heuristic です。
+- cross-file 解決は import graph、wrapper method、local call edge までで、動的 import や reflection の全パターンは扱いません。
+- 大規模な IOC / threat-intel dataset は、明示的に追加しない限り対象外です。

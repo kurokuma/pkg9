@@ -20,9 +20,11 @@ var (
 type Scanner struct{}
 
 type fileInfo struct {
-	hasSource bool
-	hasSink   bool
-	imports   []string
+	hasSource    bool
+	hasSink      bool
+	imports      []string
+	methodToSink map[string]bool
+	callEdges    []string
 }
 
 func (Scanner) ID() string { return "intent_dataflow" }
@@ -104,18 +106,22 @@ func analyzeJavaScript(path, text string) (fileInfo, bool) {
 		state.walkStmt(stmt)
 	}
 	return fileInfo{
-		hasSource: state.hasSource,
-		hasSink:   state.hasSink,
-		imports:   state.imports,
+		hasSource:    state.hasSource,
+		hasSink:      state.hasSink,
+		imports:      dedupe(state.imports),
+		methodToSink: summarizeParamToSink(state.funcs),
+		callEdges:    dedupe(state.callEdges),
 	}, true
 }
 
 type jsFlowState struct {
-	hasSource bool
-	hasSink   bool
-	imports   []string
-	tainted   map[string]struct{}
-	funcs     map[string]funcSummary
+	hasSource     bool
+	hasSink       bool
+	imports       []string
+	tainted       map[string]struct{}
+	importAliases map[string]string
+	funcs         map[string]funcSummary
+	callEdges     []string
 }
 
 type funcSummary struct {
@@ -195,6 +201,17 @@ func (s *jsFlowState) walkBindings(list []*jsast.Binding) {
 			s.walkExpr(binding.Target)
 		}
 		if binding.Initializer != nil {
+			if id, ok := binding.Target.(*jsast.Identifier); ok {
+				if call, ok := binding.Initializer.(*jsast.CallExpression); ok && strings.EqualFold(jsExprName(call.Callee), "require") && len(call.ArgumentList) > 0 {
+					if lit, ok := call.ArgumentList[0].(*jsast.StringLiteral); ok {
+						if s.importAliases == nil {
+							s.importAliases = map[string]string{}
+						}
+						s.importAliases[id.Name.String()] = lit.Value.String()
+						s.imports = append(s.imports, lit.Value.String())
+					}
+				}
+			}
 			if id, ok := binding.Target.(*jsast.Identifier); ok && s.exprIsSource(binding.Initializer) {
 				s.markTainted(id.Name.String())
 			}
@@ -246,6 +263,18 @@ func (s *jsFlowState) walkExpr(expr jsast.Expression) {
 				// return taint is handled by parent expression checks
 			}
 		}
+		if member, ok := n.Callee.(*jsast.DotExpression); ok {
+			if taintedArgs(n.ArgumentList, s) {
+				base := jsExprName(member.Left)
+				if modulePath, ok := s.importAliases[base]; ok {
+					s.callEdges = append(s.callEdges, modulePath)
+				}
+				if methodSummaryMatches(s.funcs, member.Identifier.Name.String(), true) {
+					s.hasSource = true
+					s.hasSink = true
+				}
+			}
+		}
 		for _, arg := range n.ArgumentList {
 			s.walkExpr(arg)
 		}
@@ -273,6 +302,9 @@ func (s *jsFlowState) walkExpr(expr jsast.Expression) {
 		s.walkExpr(n.Left)
 		s.walkExpr(n.Member)
 	case *jsast.AssignExpression:
+		if dot, ok := n.Left.(*jsast.DotExpression); ok && (s.exprIsSource(n.Right) || s.exprUsesTainted(n.Right) || s.callReturnsTaint(n.Right)) {
+			s.markTainted(jsExprName(dot))
+		}
 		if id, ok := n.Left.(*jsast.Identifier); ok && (s.exprIsSource(n.Right) || s.exprUsesTainted(n.Right) || s.callReturnsTaint(n.Right)) {
 			s.markTainted(id.Name.String())
 		}
@@ -369,6 +401,9 @@ func (s *jsFlowState) exprUsesTainted(expr jsast.Expression) bool {
 		_, ok := s.tainted[n.Name.String()]
 		return ok
 	case *jsast.DotExpression:
+		if _, ok := s.tainted[jsExprName(n)]; ok {
+			return true
+		}
 		return s.exprUsesTainted(n.Left)
 	case *jsast.BracketExpression:
 		return s.exprUsesTainted(n.Left) || s.exprUsesTainted(n.Member)
@@ -379,6 +414,9 @@ func (s *jsFlowState) exprUsesTainted(expr jsast.Expression) bool {
 			}
 		}
 		if summary, ok := s.funcs[jsExprName(n.Callee)]; ok && summary.returnsTaint {
+			return true
+		}
+		if member, ok := n.Callee.(*jsast.DotExpression); ok && methodSummaryMatches(s.funcs, member.Identifier.Name.String(), false) {
 			return true
 		}
 		return false
@@ -426,7 +464,13 @@ func (s *jsFlowState) callReturnsTaint(expr jsast.Expression) bool {
 		return false
 	}
 	summary, ok := s.funcs[jsExprName(call.Callee)]
-	return ok && summary.returnsTaint
+	if ok && summary.returnsTaint {
+		return true
+	}
+	if member, ok := call.Callee.(*jsast.DotExpression); ok {
+		return methodSummaryMatches(s.funcs, member.Identifier.Name.String(), false)
+	}
+	return false
 }
 
 func summarizeFunction(fn *jsast.FunctionLiteral) funcSummary {
@@ -520,9 +564,16 @@ func reachesSink(path string, index map[string]fileInfo, depth int, seen map[str
 	if info.hasSink && depth < 3 {
 		return true
 	}
+	for _, edge := range info.callEdges {
+		for candidate, target := range index {
+			if stringsHasImport(candidate, edge) && (target.hasSink || hasParamToSink(target) || reachesSink(candidate, index, depth-1, seen)) {
+				return true
+			}
+		}
+	}
 	for _, imp := range info.imports {
 		for candidate, target := range index {
-			if stringsHasImport(candidate, imp) && (target.hasSink || reachesSink(candidate, index, depth-1, seen)) {
+			if stringsHasImport(candidate, imp) && (target.hasSink || hasParamToSink(target) || reachesSink(candidate, index, depth-1, seen)) {
 				return true
 			}
 		}
@@ -541,6 +592,65 @@ func filterKind(signals []map[string]any, kind string) []map[string]any {
 		if signal["kind"] == kind {
 			out = append(out, signal)
 		}
+	}
+	return out
+}
+
+func taintedArgs(args []jsast.Expression, s *jsFlowState) bool {
+	for _, arg := range args {
+		if s.exprUsesTainted(arg) || s.exprIsSource(arg) {
+			return true
+		}
+	}
+	return false
+}
+
+func methodSummaryMatches(funcs map[string]funcSummary, method string, requireParamToSink bool) bool {
+	for name, summary := range funcs {
+		if name == method || strings.HasSuffix(name, "."+method) {
+			if requireParamToSink {
+				return summary.paramToSink
+			}
+			return summary.returnsTaint
+		}
+	}
+	return false
+}
+
+func summarizeParamToSink(funcs map[string]funcSummary) map[string]bool {
+	out := map[string]bool{}
+	for name, summary := range funcs {
+		if summary.paramToSink {
+			out[name] = true
+		}
+	}
+	return out
+}
+
+func hasParamToSink(info fileInfo) bool {
+	for _, value := range info.methodToSink {
+		if value {
+			return true
+		}
+	}
+	return false
+}
+
+func dedupe(values []string) []string {
+	if len(values) == 0 {
+		return nil
+	}
+	seen := map[string]struct{}{}
+	out := make([]string, 0, len(values))
+	for _, value := range values {
+		if value == "" {
+			continue
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		out = append(out, value)
 	}
 	return out
 }

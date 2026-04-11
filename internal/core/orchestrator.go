@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/kurokuma/pkg9/internal/adapters"
+	"github.com/kurokuma/pkg9/internal/adapters/gomod"
 	"github.com/kurokuma/pkg9/internal/adapters/npm"
 	"github.com/kurokuma/pkg9/internal/adapters/pypi"
 	"github.com/kurokuma/pkg9/internal/app"
@@ -51,7 +52,7 @@ type ScanRequest struct {
 func NewEngine(engineVersion string) Engine {
 	return Engine{
 		engineVersion: engineVersion,
-		adapters:      []adapters.Adapter{npm.Adapter{}, pypi.Adapter{}},
+		adapters:      []adapters.Adapter{npm.Adapter{}, pypi.Adapter{}, gomod.Adapter{}},
 		scanners: registry.New(
 			lifecycle.Scanner{},
 			entropy.Scanner{},
@@ -145,6 +146,8 @@ func (e Engine) Scan(ctx context.Context, req ScanRequest) (model.ScanResult, er
 			SuppressedFindings:   suppressedFindings,
 			RiskScore:            riskScore,
 			RiskLevel:            calculateRiskLevel(riskScore),
+			Priority:             calculatePriority(riskScore, findings, target, signals),
+			RiskFactors:          calculateRiskFactors(findings, target, signals),
 		},
 		Findings: findings,
 		Warnings: warnings,
@@ -396,6 +399,62 @@ func calculateRiskLevel(score int) string {
 	default:
 		return "SAFE"
 	}
+}
+
+func calculatePriority(score int, findings []model.Finding, target model.ScanTarget, signals map[string][]map[string]any) string {
+	factors := calculateRiskFactors(findings, target, signals)
+	switch {
+	case score >= 85 || containsFactor(factors, "cross_file_dataflow") || containsFactor(factors, "install_hook_with_exec"):
+		return "P1"
+	case score >= 60 || containsFactor(factors, "obfuscation") || containsFactor(factors, "credential_to_sink"):
+		return "P2"
+	case score >= 30 || len(findings) >= 2:
+		return "P3"
+	case score >= 1:
+		return "P4"
+	default:
+		return "P5"
+	}
+}
+
+func calculateRiskFactors(findings []model.Finding, target model.ScanTarget, signals map[string][]map[string]any) []string {
+	factors := make([]string, 0, 8)
+	if target.CanonicalPackage.HasInstallHook && len(signals["ast_dangerous_exec"]) > 0 {
+		factors = append(factors, "install_hook_with_exec")
+	}
+	if len(signals["intent_coherence"]) > 0 {
+		factors = append(factors, "credential_to_sink")
+	}
+	if len(signals["inter_module_dataflow"]) > 0 {
+		factors = append(factors, "cross_file_dataflow")
+	}
+	if len(signals["obfuscation_detected"]) > 0 {
+		factors = append(factors, "obfuscation")
+	}
+	if len(signals["ai_config_injection"]) > 0 {
+		factors = append(factors, "ai_config_injection")
+	}
+	if len(signals["typosquat_detected"]) > 0 {
+		factors = append(factors, "typosquat")
+	}
+	for _, finding := range findings {
+		switch strings.ToLower(finding.Severity) {
+		case "critical":
+			factors = append(factors, "critical_finding")
+		case "high":
+			factors = append(factors, "high_severity_finding")
+		}
+	}
+	return dedupe(factors)
+}
+
+func containsFactor(values []string, target string) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+	return false
 }
 
 func sortFindings(findings []model.Finding) {
