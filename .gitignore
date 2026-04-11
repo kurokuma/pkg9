@@ -28,3 +28,7 @@ Thumbs.db
 
 *.pyc
 __pycache__/
+
+
+npm_mal_list.txt
+pypi_mal_list.txt
