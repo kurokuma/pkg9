@@ -1,0 +1,34 @@
+metadata:
+  id: python.gmail_smtp_surveillance
+  name: Python Gmail SMTP Surveillance
+  description: Detects Gmail SMTP exfiltration used with screenshot or webcam capture code.
+  severity: high
+  confidence: high
+  tags: [python, exfiltration, surveillance]
+  category: exfiltration
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://socket.dev/blog/surveillance-malware-hidden-in-npm-and-pypi-packages
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)smtp\.gmail\.com'
+    - regex:
+        pattern: '(?is)\b(?:smtplib\.SMTP|smtplib\.SMTP_SSL|sendmail|send_message)\b'
+    - regex:
+        pattern: '(?is)\b(?:pygame\.camera|pyautogui|ImageGrab|screenshot)\b'
+emit:
+  finding_name: python_gmail_smtp_surveillance
+  message: Python source uses Gmail SMTP alongside screenshot or webcam capture logic.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1041/
+  remediation_hint: Review whether captured surveillance data is being emailed out.

@@ -1,0 +1,32 @@
+metadata:
+  id: source.google_analytics_exfiltration
+  name: Google Analytics Secret Exfiltration
+  description: Detects Google Analytics collection endpoints used with wallet or secret material references.
+  severity: critical
+  confidence: high
+  tags: [source, exfiltration, analytics]
+  category: exfiltration
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://socket.dev/blog/malicious-npm-and-pypi-packages-steal-wallet-credentials
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)google-analytics\.com/(?:collect|mp/collect)'
+    - regex:
+        pattern: '(?is)\b(?:privateKey|mnemonic|seed(?:Phrase)?|wallet|recipientAddress)\b'
+emit:
+  finding_name: google_analytics_exfiltration
+  message: Source file uses Google Analytics collection endpoints with wallet or secret references.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1041/
+  remediation_hint: Review whether analytics code is being abused to exfiltrate secrets.

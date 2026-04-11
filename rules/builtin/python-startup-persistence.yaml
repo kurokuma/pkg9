@@ -1,0 +1,32 @@
+metadata:
+  id: python.startup_persistence
+  name: Python Startup Persistence
+  description: Detects copying or writing files into Windows Startup locations.
+  severity: high
+  confidence: high
+  tags: [python, persistence, startup]
+  category: persistence
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://socket.dev/blog/surveillance-malware-hidden-in-npm-and-pypi-packages
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)(?:Start Menu\\\\Programs\\\\Startup|Startup[\\\\/])'
+    - regex:
+        pattern: '(?is)\b(?:shutil\.(?:copy|copy2)|copyfile|os\.replace|os\.rename)\b'
+emit:
+  finding_name: python_startup_persistence
+  message: Python source writes or copies files into a Startup persistence location.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1547.001/
+  remediation_hint: Review whether the package establishes Windows startup persistence.

@@ -1,0 +1,32 @@
+metadata:
+  id: source.electron_asar_tamper
+  name: Electron ASAR Tampering
+  description: Detects Electron app.asar extraction or repackaging patterns often used for wallet tampering.
+  severity: critical
+  confidence: high
+  tags: [source, electron, tampering]
+  category: tampering
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://socket.dev/blog/wallet-draining-npm-package-impersonates-nodemailer
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)\bapp\.asar\b'
+    - regex:
+        pattern: '(?is)\b(?:extractAll|createPackage|asar\.(?:extractAll|createPackage))\b'
+emit:
+  finding_name: electron_asar_tamper
+  message: Source file extracts or repackages an Electron app.asar bundle.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1565.001/
+  remediation_hint: Review whether a local Electron application is being modified at runtime.

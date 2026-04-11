@@ -1,0 +1,32 @@
+metadata:
+  id: source.telegram_bot_exfiltration
+  name: Telegram Bot Secret Exfiltration
+  description: Detects Telegram bot messaging used together with wallet or secret material references.
+  severity: critical
+  confidence: high
+  tags: [source, exfiltration, telegram]
+  category: exfiltration
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://socket.dev/blog/malicious-npm-packages-impersonate-flashbots-sdks-targeting-ethereum-wallet-credentials
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)(?:api\.telegram\.org|/bot[A-Za-z0-9:_-]+/sendMessage)'
+    - regex:
+        pattern: '(?is)\b(?:privateKey|mnemonic|seed(?:Phrase)?|wallet|secretKey)\b'
+emit:
+  finding_name: telegram_bot_exfiltration
+  message: Source file combines Telegram bot messaging with wallet or secret material access.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1041/
+  remediation_hint: Review whether secrets or wallet material are being sent to Telegram.

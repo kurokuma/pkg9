@@ -1,0 +1,32 @@
+metadata:
+  id: source.socketio_c2
+  name: Socket.IO Command Channel
+  description: Detects Socket.IO or websocket command-channel logic paired with execution or destructive behavior.
+  severity: critical
+  confidence: medium
+  tags: [source, c2, socketio]
+  category: command-and-control
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://socket.dev/blog/npm-package-wipes-codebases-with-remote-trigger
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)\b(?:socket\.io-client|new\s+WebSocket|io\s*\()'
+    - regex:
+        pattern: '(?is)\b(?:on\s*\(\s*["''](?:command|cmd|message)["'']|execSync|exec\s*\(|rm\s+-rf)\b'
+emit:
+  finding_name: socketio_c2
+  message: Source file contains a socket-based command channel tied to execution or destructive actions.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1105/
+  remediation_hint: Review whether the package receives remote commands and executes them locally.

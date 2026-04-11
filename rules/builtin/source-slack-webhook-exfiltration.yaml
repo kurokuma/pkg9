@@ -1,0 +1,32 @@
+metadata:
+  id: source.slack_webhook_exfiltration
+  name: Slack Webhook System Exfiltration
+  description: Detects Slack webhook delivery combined with local system or session profiling data.
+  severity: high
+  confidence: high
+  tags: [source, exfiltration, slack]
+  category: exfiltration
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://socket.dev/blog/surveillance-malware-hidden-in-npm-and-pypi-packages
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)hooks\.slack\.com/services/'
+    - regex:
+        pattern: '(?is)\b(?:os\.(?:homedir|hostname|userInfo)|process\.(?:cwd|env)|navigator\.userAgent|document\.cookie)\b'
+emit:
+  finding_name: slack_webhook_exfiltration
+  message: Source file posts local system or session context to a Slack webhook.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1041/
+  remediation_hint: Review whether local environment data is being sent to Slack.

@@ -68,6 +68,7 @@ func TestScanMuaddibDangerousSample(t *testing.T) {
 		"package.lifecycle_aws_credential_access": false,
 		"package.lifecycle_network_module":    false,
 		"package.lifecycle_node_inline_exec":  false,
+		"package.lifecycle_global_install":    false,
 		"package.dependency_url":              false,
 		"shell.dangerous_pattern":             false,
 		"shell.wget_chmod_exec":               false,
@@ -97,6 +98,17 @@ func TestScanMuaddibDangerousSample(t *testing.T) {
 		"source.staged_eval_decode":           false,
 		"source.staged_payload_execution":     false,
 		"source.staged_binary_payload":        false,
+		"source.telegram_bot_exfiltration":    false,
+		"source.google_analytics_exfiltration": false,
+		"source.slack_webhook_exfiltration":   false,
+		"source.iframe_keylogger_exfiltration": false,
+		"source.authorized_keys_persistence":  false,
+		"source.electron_asar_tamper":         false,
+		"source.socketio_c2":                  false,
+		"source.local_websocket_daemon":       false,
+		"source.solana_dead_drop_c2":          false,
+		"source.header_keyed_payload":         false,
+		"source.init_lock_persistence":        false,
 	}
 	for _, finding := range result.Findings {
 		if _, ok := want[finding.RuleID]; ok {
@@ -131,11 +143,15 @@ func TestScanPyPIDangerousSample(t *testing.T) {
 	}
 
 	want := map[string]bool{
-		"python.exec_behavior":       false,
-		"python.credential_access":   false,
-		"python.network_behavior":    false,
-		"python.setup_behavior":      false,
-		"python.requirements_remote": false,
+		"python.exec_behavior":                false,
+		"python.credential_access":            false,
+		"python.network_behavior":             false,
+		"python.setup_behavior":               false,
+		"python.requirements_remote":          false,
+		"python.discord_webhook_surveillance": false,
+		"python.gmail_smtp_surveillance":      false,
+		"python.startup_persistence":          false,
+		"python.anti_analysis":                false,
 	}
 	for _, finding := range result.Findings {
 		if _, ok := want[finding.RuleID]; ok {

@@ -1,0 +1,32 @@
+metadata:
+  id: source.init_lock_persistence
+  name: Init Lock Persistence Marker
+  description: Detects timestamp lock files like init.json used to rate-limit malicious re-execution.
+  severity: high
+  confidence: medium
+  tags: [source, persistence]
+  category: persistence
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://www.stepsecurity.io/blog/malicious-npm-releases-found-in-popular-react-native-packages---130k-monthly-downloads-compromised
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)(?:~/init\.json|init\.json)'
+    - regex:
+        pattern: '(?is)\b(?:Date\.now|timestamp|48\s*\*\s*60\s*\*\s*60|172800)\b'
+emit:
+  finding_name: init_lock_persistence
+  message: Source file uses an init.json timestamp lock to suppress or rate-limit re-execution.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1070/
+  remediation_hint: Review whether the package drops marker files to control repeated malicious execution.

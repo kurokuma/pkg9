@@ -175,8 +175,13 @@ Current coverage includes:
 - dangerous shell patterns, exfiltration, reverse shell, and destructive shell variants
 - dynamic require/import, require.cache poisoning, env proxy interception, sandbox checks
 - staged decode/eval and binary-payload style source patterns
+- Telegram, Slack, and Google Analytics exfiltration patterns
+- iframe keylogging, SSH authorized_keys persistence, Electron app.asar tampering, and socket-based C2 patterns
+- install-time global package installation, localhost websocket daemon persistence, Solana dead-drop C2, and header-keyed payload execution
 - JavaScript AST signals
 - Python behavior and packaging signals
+- Python Discord webhook, Gmail SMTP surveillance, and Startup persistence patterns
+- Python anti-analysis patterns targeting tracer, debugger, uptime, and analyst tooling checks
 - AI config injection
 - obfuscation
 - intent coherence and inter-module dataflow lite

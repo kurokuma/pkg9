@@ -1,0 +1,32 @@
+metadata:
+  id: python.discord_webhook_surveillance
+  name: Python Discord Webhook Surveillance
+  description: Detects Discord webhook exfiltration combined with password, screenshot, webcam, or token collection.
+  severity: critical
+  confidence: high
+  tags: [python, exfiltration, surveillance]
+  category: exfiltration
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://socket.dev/blog/typosquatting-on-pypi-malicious-package-mimics-popular-browser-cookie-library
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)discord(?:app)?\.com/api/webhooks/'
+    - regex:
+        pattern: '(?is)\b(?:passwords?|Login Data|get_token|getcam|capture_image|screenshot|webcam|Chrome passwords)\b'
+emit:
+  finding_name: python_discord_webhook_surveillance
+  message: Python source combines Discord webhook exfiltration with surveillance or credential collection.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1041/
+  remediation_hint: Review whether collected credentials or surveillance output are sent to Discord.

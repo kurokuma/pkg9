@@ -1,0 +1,32 @@
+metadata:
+  id: source.authorized_keys_persistence
+  name: Authorized Keys Persistence
+  description: Detects writes to SSH authorized_keys from package source.
+  severity: critical
+  confidence: high
+  tags: [source, persistence, ssh]
+  category: persistence
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://socket.dev/blog/npm-package-wipes-codebases-with-remote-trigger
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)authorized_keys'
+    - regex:
+        pattern: '(?is)\b(?:appendFile|appendFileSync|writeFile|writeFileSync|>>)\b'
+emit:
+  finding_name: authorized_keys_persistence
+  message: Source file writes to SSH authorized_keys.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1098.004/
+  remediation_hint: Review whether the package establishes SSH persistence.

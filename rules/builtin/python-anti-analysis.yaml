@@ -1,0 +1,32 @@
+metadata:
+  id: python.anti_analysis
+  name: Python Anti-Analysis
+  description: Detects anti-analysis checks for tracer, debugger, uptime, or security tools in Python source.
+  severity: high
+  confidence: high
+  tags: [python, anti-analysis]
+  category: defense-evasion
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://www.stepsecurity.io/blog/bittensor-wallet-4-0-2-compromised-on-pypi---backdoor-exfiltrates-private-keys
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)(?:TracerPid|/proc/self/status|psutil\.boot_time|time\.time\(\)\s*-\s*psutil\.boot_time)'
+    - regex:
+        pattern: '(?is)\b(?:strace|gdb|wireshark|frida)\b'
+emit:
+  finding_name: python_anti_analysis
+  message: Python source performs anti-analysis checks against uptime, debugger state, or security tooling.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1497/
+  remediation_hint: Review whether the package is trying to evade sandbox or analyst inspection.

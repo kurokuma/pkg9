@@ -1,0 +1,34 @@
+metadata:
+  id: source.iframe_keylogger_exfiltration
+  name: Iframe Keylogger Exfiltration
+  description: Detects iframe-based keylogging patterns paired with message relay or network exfiltration.
+  severity: critical
+  confidence: high
+  tags: [source, keylogger, exfiltration]
+  category: exfiltration
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://socket.dev/blog/surveillance-malware-hidden-in-npm-and-pypi-packages
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)\b(?:iframe|contentWindow)\b'
+    - regex:
+        pattern: '(?is)\b(?:onkeyup|addEventListener\s*\(\s*["'']keyup["''])'
+    - regex:
+        pattern: '(?is)\b(?:postMessage|XMLHttpRequest|fetch)\b'
+emit:
+  finding_name: iframe_keylogger_exfiltration
+  message: Source file implements iframe-driven key capture with relay or exfiltration behavior.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1056.001/
+  remediation_hint: Review whether the code captures keystrokes from iframe content.

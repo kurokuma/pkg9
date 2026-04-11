@@ -1,0 +1,32 @@
+metadata:
+  id: source.local_websocket_daemon
+  name: Local WebSocket Daemon Persistence
+  description: Detects local websocket daemon endpoints paired with launchd or systemd persistence.
+  severity: critical
+  confidence: high
+  tags: [source, persistence, websocket]
+  category: persistence
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://www.stepsecurity.io/blog/cline-supply-chain-attack-detected-cline-2-3-0-silently-installs-openclaw
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)ws://127\.0\.0\.1:\d{2,5}'
+    - regex:
+        pattern: '(?is)\b(?:launchd|systemd|launchctl|systemctl)\b'
+emit:
+  finding_name: local_websocket_daemon
+  message: Source file references a localhost websocket daemon with launchd/systemd persistence markers.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1543/
+  remediation_hint: Review whether the package establishes a background local daemon.

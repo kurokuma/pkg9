@@ -174,8 +174,13 @@ baseline 運用の例:
 - 危険な shell pattern、exfiltration、reverse shell、破壊的 command の派生検知
 - dynamic require/import、require.cache poisoning、env proxy interception、sandbox check
 - staged decode/eval と binary-payload 系の source pattern
+- Telegram / Slack / Google Analytics 系の exfiltration pattern
+- iframe keylogging、SSH authorized_keys persistence、Electron app.asar tampering、socket ベース C2 pattern
+- install-time global package installation、localhost websocket daemon persistence、Solana dead-drop C2、header-keyed payload execution
 - JavaScript AST シグナル
 - Python の挙動 / packaging シグナル
+- Python の Discord webhook、Gmail SMTP surveillance、Startup persistence pattern
+- Python の tracer / debugger / uptime / analyst tooling を狙う anti-analysis pattern
 - AI config injection
 - obfuscation
 - intent coherence / inter-module dataflow lite

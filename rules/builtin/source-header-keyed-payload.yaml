@@ -1,0 +1,34 @@
+metadata:
+  id: source.header_keyed_payload
+  name: Header-Keyed Encrypted Payload
+  description: Detects encrypted payload fetches where decryption material is read from response headers and executed in memory.
+  severity: critical
+  confidence: high
+  tags: [source, c2, crypto]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://www.stepsecurity.io/blog/malicious-npm-releases-found-in-popular-react-native-packages---130k-monthly-downloads-compromised
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)\b(?:secretkey|ivbase64)\b'
+    - regex:
+        pattern: '(?is)\b(?:headers\.get|response\.headers|res\.headers)\b'
+    - regex:
+        pattern: '(?is)\b(?:eval\s*\(|vm\.Script|Buffer\.from)\b'
+emit:
+  finding_name: header_keyed_payload
+  message: Source file reads decryption material from response headers and executes the resulting payload in memory.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1027/
+  remediation_hint: Review whether downloaded encrypted content is decrypted and executed at runtime.

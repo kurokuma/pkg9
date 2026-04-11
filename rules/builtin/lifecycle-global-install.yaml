@@ -1,0 +1,30 @@
+metadata:
+  id: package.lifecycle_global_install
+  name: Lifecycle Global Package Install
+  description: Detects lifecycle scripts that install a secondary package globally.
+  severity: critical
+  confidence: high
+  tags: [npm, lifecycle, persistence]
+  category: persistence
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://www.stepsecurity.io/blog/cline-supply-chain-attack-detected-cline-2-3-0-silently-installs-openclaw
+scope: file
+selectors:
+  ecosystems: [npm]
+  path_glob: ["package.json"]
+conditions:
+  regex:
+    pattern: '(?is)\bnpm\s+install\s+-g\s+[a-z0-9@._/-]+'
+emit:
+  finding_name: lifecycle_global_install
+  message: package.json lifecycle script installs another package globally.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://docs.npmjs.com/cli/v10/commands/npm-install
+  remediation_hint: Review whether install-time global package installation is necessary and explicitly disclosed.
