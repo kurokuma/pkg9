@@ -9,8 +9,8 @@ import (
 
 	toml "github.com/pelletier/go-toml/v2"
 
-	"github.com/nanoha/pkg9/scanner/internal/model"
-	"github.com/nanoha/pkg9/scanner/internal/util"
+	"github.com/kurokuma/pkg9/internal/model"
+	"github.com/kurokuma/pkg9/internal/util"
 )
 
 type Adapter struct{}

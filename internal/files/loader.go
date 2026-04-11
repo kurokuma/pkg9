@@ -8,8 +8,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/nanoha/pkg9/scanner/internal/model"
-	"github.com/nanoha/pkg9/scanner/internal/util"
+	"github.com/kurokuma/pkg9/internal/model"
+	"github.com/kurokuma/pkg9/internal/util"
 )
 
 const (

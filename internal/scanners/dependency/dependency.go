@@ -3,8 +3,8 @@ package dependency
 import (
 	"strings"
 
-	"github.com/nanoha/pkg9/scanner/internal/model"
-	"github.com/nanoha/pkg9/scanner/internal/scanners/registry"
+	"github.com/kurokuma/pkg9/internal/model"
+	"github.com/kurokuma/pkg9/internal/scanners/registry"
 )
 
 var suspiciousDeps = []string{

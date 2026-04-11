@@ -9,7 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/nanoha/pkg9/scanner/internal/model"
+	"github.com/kurokuma/pkg9/internal/model"
 )
 
 type Metadata struct {

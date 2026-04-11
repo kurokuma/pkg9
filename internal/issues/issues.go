@@ -1,6 +1,6 @@
 package issues
 
-import "github.com/nanoha/pkg9/scanner/internal/model"
+import "github.com/kurokuma/pkg9/internal/model"
 
 type Collector struct {
 	Warnings []model.StructuredIssue

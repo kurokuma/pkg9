@@ -1,4 +1,4 @@
-module github.com/nanoha/pkg9/scanner
+module github.com/kurokuma/pkg9
 
 go 1.26
 

@@ -1,6 +1,6 @@
 package adapters
 
-import "github.com/nanoha/pkg9/scanner/internal/model"
+import "github.com/kurokuma/pkg9/internal/model"
 
 type Adapter interface {
 	Name() string

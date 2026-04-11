@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/nanoha/pkg9/scanner/internal/files"
+	"github.com/kurokuma/pkg9/internal/files"
 )
 
 func TestAdapterLoadExtractsCanonicalFields(t *testing.T) {

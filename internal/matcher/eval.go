@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/nanoha/pkg9/scanner/internal/model"
-	"github.com/nanoha/pkg9/scanner/internal/rules"
+	"github.com/kurokuma/pkg9/internal/model"
+	"github.com/kurokuma/pkg9/internal/rules"
 )
 
 type EvalContext struct {

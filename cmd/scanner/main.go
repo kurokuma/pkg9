@@ -9,9 +9,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/nanoha/pkg9/scanner/internal/app"
-	"github.com/nanoha/pkg9/scanner/internal/core"
-	"github.com/nanoha/pkg9/scanner/internal/rules"
+	"github.com/kurokuma/pkg9/internal/app"
+	"github.com/kurokuma/pkg9/internal/core"
+	"github.com/kurokuma/pkg9/internal/rules"
 )
 
 func main() {

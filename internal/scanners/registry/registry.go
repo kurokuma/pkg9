@@ -1,6 +1,6 @@
 package registry
 
-import "github.com/nanoha/pkg9/scanner/internal/model"
+import "github.com/kurokuma/pkg9/internal/model"
 
 type Output struct {
 	Signals   map[string][]map[string]any

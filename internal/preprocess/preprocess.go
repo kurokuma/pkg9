@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/nanoha/pkg9/scanner/internal/model"
+	"github.com/kurokuma/pkg9/internal/model"
 )
 
 var (

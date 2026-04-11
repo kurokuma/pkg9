@@ -3,7 +3,7 @@ package preprocess
 import (
 	"testing"
 
-	"github.com/nanoha/pkg9/scanner/internal/model"
+	"github.com/kurokuma/pkg9/internal/model"
 )
 
 func TestRunExtractsDecodedStringAndHexCandidate(t *testing.T) {
