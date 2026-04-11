@@ -25,3 +25,6 @@ Thumbs.db
 
 # downloaded sample packages
 /mal-package-downloader/dl/
+
+*.pyc
+__pycache__/
