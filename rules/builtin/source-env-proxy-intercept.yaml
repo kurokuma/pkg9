@@ -1,0 +1,30 @@
+metadata:
+  id: source.env_proxy_intercept
+  name: Environment Variable Proxy Interception
+  description: Detects Proxy(process.env) interception patterns.
+  severity: critical
+  confidence: high
+  tags: [source, credentials]
+  category: credential-access
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  classifications: [source]
+  languages: [javascript]
+conditions:
+  regex:
+    pattern: '(?is)new\s+Proxy\s*\(\s*process\.env'
+emit:
+  finding_name: env_proxy_intercept
+  message: Source file wraps process.env in a Proxy.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1552/001/
+  remediation_hint: Review whether environment access is being intercepted for collection or exfiltration.

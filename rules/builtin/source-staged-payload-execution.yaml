@@ -1,0 +1,32 @@
+metadata:
+  id: source.staged_payload_execution
+  name: Staged Payload Execution
+  description: Detects network fetch plus eval-like execution in the same file.
+  severity: critical
+  confidence: high
+  tags: [source, execution]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)\b(?:fetch|axios\.(?:get|post)|https?\.request|requests\.(?:get|post))\b'
+    - regex:
+        pattern: '(?is)\b(?:eval\s*\(|new\s+Function\s*\()'
+emit:
+  finding_name: staged_payload_execution
+  message: Source file combines network retrieval with eval-like execution.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1105/
+  remediation_hint: Review whether remote content is being executed as code.

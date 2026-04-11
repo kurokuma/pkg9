@@ -1,0 +1,30 @@
+metadata:
+  id: package.lifecycle_github_token_access
+  name: GitHub Token Access in Lifecycle Script
+  description: Detects lifecycle scripts that reference GITHUB_TOKEN.
+  severity: high
+  confidence: high
+  tags: [npm, lifecycle, credentials]
+  category: credential-access
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  ecosystems: [npm]
+  path_glob: ["package.json"]
+conditions:
+  regex:
+    pattern: '(?is)"(?:preinstall|install|postinstall|prepare|prepack)"\s*:\s*"[^"\n]*GITHUB_TOKEN'
+emit:
+  finding_name: lifecycle_github_token_access
+  message: package.json lifecycle script references GITHUB_TOKEN.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions
+  remediation_hint: Remove GitHub token access from lifecycle scripts.

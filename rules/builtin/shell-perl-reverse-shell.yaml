@@ -1,0 +1,29 @@
+metadata:
+  id: shell.perl_reverse_shell
+  name: Perl Reverse Shell
+  description: Detects Perl reverse shell one-liners in shell scripts.
+  severity: critical
+  confidence: high
+  tags: [shell, reverse-shell]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  path_glob: ["*.sh", "*.bash", "*.zsh"]
+conditions:
+  regex:
+    pattern: "(?is)perl\\s+-e[^\\n]{0,1000}socket"
+emit:
+  finding_name: shell_perl_reverse_shell
+  message: Shell script contains a Perl reverse shell one-liner.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1059/006/
+  remediation_hint: Remove reverse shell logic and review the script origin.

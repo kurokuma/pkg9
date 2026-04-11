@@ -171,7 +171,10 @@ Current built-in rules are stored in [rules/builtin](./rules/builtin).
 Current coverage includes:
 
 - npm lifecycle script abuse
-- dangerous shell patterns
+- granular lifecycle token / credential access patterns
+- dangerous shell patterns, exfiltration, reverse shell, and destructive shell variants
+- dynamic require/import, require.cache poisoning, env proxy interception, sandbox checks
+- staged decode/eval and binary-payload style source patterns
 - JavaScript AST signals
 - Python behavior and packaging signals
 - AI config injection

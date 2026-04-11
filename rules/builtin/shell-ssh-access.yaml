@@ -1,0 +1,29 @@
+metadata:
+  id: shell.ssh_access
+  name: SSH Key Access
+  description: Detects shell access to SSH keys or directories.
+  severity: high
+  confidence: high
+  tags: [shell, credentials]
+  category: credential-access
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  path_glob: ["*.sh", "*.bash", "*.zsh"]
+conditions:
+  regex:
+    pattern: '(?is)(?:~\/\.ssh|\.ssh\/id_rsa|known_hosts)'
+emit:
+  finding_name: shell_ssh_access
+  message: Shell script references SSH keys or SSH configuration files.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1552/004/
+  remediation_hint: Review whether SSH credential access is legitimate.

@@ -170,7 +170,10 @@ baseline 運用の例:
 主なカバレッジ:
 
 - npm lifecycle script の悪用検知
-- 危険な shell pattern
+- lifecycle script 内の token / credential access の細粒度検知
+- 危険な shell pattern、exfiltration、reverse shell、破壊的 command の派生検知
+- dynamic require/import、require.cache poisoning、env proxy interception、sandbox check
+- staged decode/eval と binary-payload 系の source pattern
 - JavaScript AST シグナル
 - Python の挙動 / packaging シグナル
 - AI config injection

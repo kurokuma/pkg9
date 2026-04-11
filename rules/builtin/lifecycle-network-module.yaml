@@ -1,0 +1,33 @@
+metadata:
+  id: package.lifecycle_network_module
+  name: Network Module in Lifecycle Script
+  description: Detects node inline execution that loads http or https in lifecycle scripts.
+  severity: high
+  confidence: high
+  tags: [npm, lifecycle, network]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  ecosystems: [npm]
+  path_glob: ["package.json"]
+conditions:
+  any_of:
+    - regex:
+        pattern: '(?is)"(?:preinstall|install|postinstall|prepare|prepack)"\s*:\s*"(?:\\.|[^"\n])*require\(["'']https?["'']\)'
+    - regex:
+        pattern: '(?is)"(?:preinstall|install|postinstall|prepare|prepack)"\s*:\s*"(?:\\.|[^"\n])*https?\.(?:get|request)\s*\('
+emit:
+  finding_name: lifecycle_network_module
+  message: package.json lifecycle script loads a network module inline.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://blog.phylum.io/shai-hulud-npm-worm/
+  remediation_hint: Review install-time network access and inline Node execution.

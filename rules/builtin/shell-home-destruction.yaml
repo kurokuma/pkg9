@@ -1,0 +1,32 @@
+metadata:
+  id: shell.home_destruction
+  name: Home Directory Destruction
+  description: Detects destructive commands targeting the user's home directory.
+  severity: critical
+  confidence: high
+  tags: [shell, destructive]
+  category: destructive
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  path_glob: ["*.sh", "*.bash", "*.zsh"]
+conditions:
+  any_of:
+    - regex:
+        pattern: '(?is)\bshred\b[^\n]{0,400}\$HOME'
+    - regex:
+        pattern: '(?is)\brm\s+-rf\s+(?:~/|\$HOME|/home/)'
+emit:
+  finding_name: shell_home_destruction
+  message: Shell script targets the home directory for destruction.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://www.wiz.io/blog/shai-hulud-npm-supply-chain-attack
+  remediation_hint: Remove destructive commands immediately and review package integrity.

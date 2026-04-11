@@ -1,0 +1,29 @@
+metadata:
+  id: shell.fifo_netcat_reverse_shell
+  name: FIFO and Netcat Reverse Shell
+  description: Detects mkfifo plus netcat reverse shell patterns.
+  severity: critical
+  confidence: high
+  tags: [shell, reverse-shell]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  path_glob: ["*.sh", "*.bash", "*.zsh"]
+conditions:
+  regex:
+    pattern: '(?is)mkfifo[^\n]{0,800}\|\s*nc\s'
+emit:
+  finding_name: shell_fifo_netcat_reverse_shell
+  message: Shell script contains an mkfifo plus netcat reverse shell pattern.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1059/004/
+  remediation_hint: Remove named-pipe reverse shell behavior.

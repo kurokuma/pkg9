@@ -1,0 +1,30 @@
+metadata:
+  id: source.dynamic_import
+  name: Dynamic import()
+  description: Detects import() with computed arguments.
+  severity: high
+  confidence: high
+  tags: [source, obfuscation]
+  category: obfuscation
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  classifications: [source]
+  languages: [javascript]
+conditions:
+  regex:
+    pattern: '(?is)\bimport\s*\(\s*["''][^"'']+["'']\s*\+\s*["''][^"'']+["'']'
+emit:
+  finding_name: dynamic_import
+  message: Source file uses import() with a computed module path.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1027/
+  remediation_hint: Review whether dynamic import hides package behavior.

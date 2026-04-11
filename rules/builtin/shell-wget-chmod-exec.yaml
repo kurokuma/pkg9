@@ -1,0 +1,29 @@
+metadata:
+  id: shell.wget_chmod_exec
+  name: Wget Download and Execute
+  description: Detects shell commands that download a file with wget and execute it after chmod.
+  severity: critical
+  confidence: high
+  tags: [shell, execution]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  path_glob: ["*.sh", "*.bash", "*.zsh"]
+conditions:
+  regex:
+    pattern: '(?is)wget[^\n]{0,800}(?:-O|--output-document)[^\n]{0,800}(?:&&|;)[^\n]{0,400}chmod[^\n]{0,200}\+x[^\n]{0,400}(?:&&|;)[^\n]{0,400}(?:/tmp/|\.\/|bash\b|sh\b)'
+emit:
+  finding_name: shell_wget_chmod_exec
+  message: Shell script downloads a file and executes it after chmod.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://blog.phylum.io/shai-hulud-npm-worm/
+  remediation_hint: Review the downloaded payload and remove direct execution.

@@ -1,0 +1,29 @@
+metadata:
+  id: shell.wget_base64_decode
+  name: Wget and Base64 Decode
+  description: Detects wget staging followed by base64 decoding.
+  severity: high
+  confidence: high
+  tags: [shell, obfuscation]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  path_glob: ["*.sh", "*.bash", "*.zsh"]
+conditions:
+  regex:
+    pattern: '(?is)wget[^\n]{0,800}base64\s+-d'
+emit:
+  finding_name: shell_wget_base64_decode
+  message: Shell script downloads content with wget and decodes it with base64.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1105/
+  remediation_hint: Review staged payload decoding and execution.

@@ -1,0 +1,30 @@
+metadata:
+  id: package.lifecycle_suspicious
+  name: Suspicious Lifecycle Script
+  description: Detects the presence of install-time lifecycle script definitions in package.json.
+  severity: medium
+  confidence: medium
+  tags: [npm, lifecycle]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  ecosystems: [npm]
+  path_glob: ["package.json"]
+conditions:
+  regex:
+    pattern: '(?is)"(?:preinstall|install|postinstall|prepare|prepack)"\s*:'
+emit:
+  finding_name: lifecycle_suspicious
+  message: package.json defines an install-time lifecycle script.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://docs.npmjs.com/cli/v9/using-npm/scripts#life-cycle-scripts
+  remediation_hint: Review lifecycle scripts before install.

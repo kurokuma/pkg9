@@ -1,0 +1,33 @@
+metadata:
+  id: source.staged_binary_payload
+  name: Staged Binary Payload
+  description: Detects references to image or wasm files alongside eval-like execution.
+  severity: high
+  confidence: high
+  tags: [source, obfuscation]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  classifications: [source]
+  languages: [javascript]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)\b(?:eval\s*\(|new\s+Function\s*\()'
+    - regex:
+        pattern: '(?is)\.(?:png|jpg|jpeg|wasm)\b'
+emit:
+  finding_name: staged_binary_payload
+  message: Source file references a binary-looking asset together with eval-like execution.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1027/003/
+  remediation_hint: Review whether payload bytes are hidden in non-code assets.

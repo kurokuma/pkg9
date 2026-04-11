@@ -1,0 +1,35 @@
+metadata:
+  id: source.staged_eval_decode
+  name: Staged Eval Decode
+  description: Detects eval or Function fed from atob or Buffer base64 decoding.
+  severity: critical
+  confidence: high
+  tags: [source, obfuscation]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  classifications: [source]
+  languages: [javascript]
+conditions:
+  any_of:
+    - regex:
+        pattern: '(?is)eval\s*\(\s*atob\s*\('
+    - regex:
+        pattern: '(?is)eval\s*\(\s*Buffer\.from\s*\('
+    - regex:
+        pattern: '(?is)new\s+Function\s*\(\s*atob\s*\('
+emit:
+  finding_name: staged_eval_decode
+  message: Source file decodes content and immediately feeds it into eval or Function.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1140/
+  remediation_hint: Review decoded payloads before any execution.

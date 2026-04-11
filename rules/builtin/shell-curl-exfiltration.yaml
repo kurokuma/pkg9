@@ -1,0 +1,29 @@
+metadata:
+  id: shell.curl_exfiltration
+  name: Data Exfiltration via Curl
+  description: Detects curl POST-style exfiltration commands.
+  severity: high
+  confidence: high
+  tags: [shell, exfiltration]
+  category: exfiltration
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  path_glob: ["*.sh", "*.bash", "*.zsh"]
+conditions:
+  regex:
+    pattern: '(?is)curl[^\n]{0,800}-X\s*POST[^\n]{0,800}-d'
+emit:
+  finding_name: shell_curl_exfiltration
+  message: Shell script contains a curl POST exfiltration pattern.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1041/
+  remediation_hint: Review outbound POST requests and any transmitted credentials.

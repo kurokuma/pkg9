@@ -1,0 +1,30 @@
+metadata:
+  id: source.detached_background_process
+  name: Detached Background Process
+  description: Detects detached child process execution.
+  severity: high
+  confidence: high
+  tags: [source, persistence]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  classifications: [source]
+  languages: [javascript]
+conditions:
+  regex:
+    pattern: '(?is)\b(?:spawn|fork)\s*\([^\n]{0,1000}detached\s*:\s*true'
+emit:
+  finding_name: detached_background_process
+  message: Source file starts a detached background process.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1036/009/
+  remediation_hint: Review whether background execution is used for persistence.

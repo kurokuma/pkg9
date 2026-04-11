@@ -1,0 +1,30 @@
+metadata:
+  id: source.require_cache_poison
+  name: Require Cache Poisoning
+  description: Detects access to require.cache for module hijacking.
+  severity: critical
+  confidence: high
+  tags: [source, persistence]
+  category: behavior
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  classifications: [source]
+  languages: [javascript]
+conditions:
+  regex:
+    pattern: '(?is)\brequire\.cache\b'
+emit:
+  finding_name: require_cache_poison
+  message: Source file accesses require.cache.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1574/006/
+  remediation_hint: Review whether the code hijacks or replaces loaded modules.

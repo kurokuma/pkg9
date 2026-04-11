@@ -1,0 +1,30 @@
+metadata:
+  id: package.lifecycle_node_inline_exec
+  name: Node Inline Execution in Lifecycle Script
+  description: Detects node -e inline execution in lifecycle scripts.
+  severity: high
+  confidence: high
+  tags: [npm, lifecycle, node]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  ecosystems: [npm]
+  path_glob: ["package.json"]
+conditions:
+  regex:
+    pattern: '(?is)"(?:preinstall|install|postinstall|prepare|prepack)"\s*:\s*"[^"\n]*\bnode\s+-e\b'
+emit:
+  finding_name: lifecycle_node_inline_exec
+  message: package.json lifecycle script uses node -e inline execution.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://owasp.org/www-community/attacks/Command_Injection
+  remediation_hint: Review inline Node execution at install time.

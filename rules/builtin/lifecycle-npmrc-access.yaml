@@ -1,0 +1,30 @@
+metadata:
+  id: package.lifecycle_npmrc_access
+  name: npmrc Access in Lifecycle Script
+  description: Detects lifecycle scripts that reference .npmrc.
+  severity: high
+  confidence: high
+  tags: [npm, lifecycle, credentials]
+  category: credential-access
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  ecosystems: [npm]
+  path_glob: ["package.json"]
+conditions:
+  regex:
+    pattern: '(?is)"(?:preinstall|install|postinstall|prepare|prepack)"\s*:\s*"[^"\n]*\.npmrc'
+emit:
+  finding_name: lifecycle_npmrc_access
+  message: package.json lifecycle script references .npmrc.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://blog.phylum.io/shai-hulud-npm-worm/
+  remediation_hint: Remove .npmrc access from lifecycle scripts unless strictly required.

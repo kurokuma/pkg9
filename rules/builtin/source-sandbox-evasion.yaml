@@ -1,0 +1,29 @@
+metadata:
+  id: source.sandbox_evasion
+  name: Sandbox or Container Evasion
+  description: Detects common container or sandbox detection paths.
+  severity: high
+  confidence: high
+  tags: [source, anti-analysis]
+  category: behavior
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://raw.githubusercontent.com/DNSZLSK/muad-dib/master/src/rules/index.js
+scope: file
+selectors:
+  classifications: [source]
+conditions:
+  regex:
+    pattern: '(?is)(?:/\.dockerenv|/proc/cgroup)'
+emit:
+  finding_name: sandbox_evasion
+  message: Source file checks for container or sandbox markers.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://attack.mitre.org/techniques/T1497/001/
+  remediation_hint: Review anti-analysis checks and whether they gate malicious behavior.
