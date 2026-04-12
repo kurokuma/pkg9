@@ -169,6 +169,28 @@ baseline 運用の例:
 
 現在の built-in ルールは [rules/builtin](./rules/builtin) にあります。
 
+読み込まれている正確な rule ID 一覧は次で表示できます。
+
+```bash
+./scanner rules list --rules-dir ./rules
+```
+
+主なルール系統:
+
+- `ai_config.*`: `ai_config.compound_injection`
+- `ast.*`: `ast.binary_dropper`, `ast.credential_access`, `ast.dangerous_exec`, `ast.prototype_hook`
+- `browser.*`: `browser.credential_theft`, `browser.wallet_tampering`
+- `dataflow.*`: `dataflow.inter_module`
+- `dependency.*`: `dependency.typosquat_detected`
+- `hash.*`: `hash.ioc_match`
+- `intent.*`: `intent.coherence`
+- `obfuscation.*`: `obfuscation.detected`
+- `package.*`: lifecycle script、dependency URL、install-time behavior
+- `pkg.*`: package-level entropy、install hook、dependency IOC summary
+- `python.*`: Python の exec、credential、network、surveillance、anti-analysis、setup
+- `shell.*`: shell execution、exfiltration、reverse shell、destructive command
+- `source.*`: source-level の credential、exfiltration、persistence、staging、anti-analysis
+
 主なカバレッジ:
 
 - npm lifecycle script の悪用検知
@@ -196,6 +218,84 @@ baseline 運用の例:
 - `require.cache` は read-only access ではなく mutation / delete を中心に検知
 - socket C2 は minified な `io()` 一般を避けるよう調整
 - intent/dataflow の source 判定は汎用 `process.env` より secret-like な env / credential material を優先
+
+## Risk 評価
+
+`risk_score` は `0..100` に丸め込まれる集計スコアです。
+
+現在の主な加点要素:
+
+- finding severity:
+  - `critical` `+30`
+  - `high` `+18`
+  - `medium` `+10`
+  - `low` `+4`
+  - `info` `+1`
+- package-level bonus:
+  - install hook `+8`
+  - build hook `+3`
+  - `intent_coherence` signal `+15`
+  - `inter_module_dataflow` signal `+15`
+  - `obfuscation_detected` signal `+8`
+  - `ai_config_injection` signal `+10`
+  - `ast_dangerous_exec` signal `+8`
+  - `python_exec_behavior` signal `+8`
+  - `typosquat_detected` signal `+6`
+
+`risk_level` の閾値:
+
+- `SAFE`: `0`
+- `LOW`: `1..24`
+- `MEDIUM`: `25..49`
+- `HIGH`: `50..74`
+- `CRITICAL`: `75..100`
+
+`priority` の閾値:
+
+- `P1`: score `>= 85`、または cross-file dataflow、または install hook + dangerous exec
+- `P2`: score `>= 60`、または obfuscation、または credential-to-sink
+- `P3`: score `>= 30`、または finding 2 件以上
+- `P4`: score `>= 1`
+- `P5`: score `0`
+
+現在の `risk_factors`:
+
+- `install_hook_with_exec`
+- `credential_to_sink`
+- `cross_file_dataflow`
+- `obfuscation`
+- `ai_config_injection`
+- `typosquat`
+- `critical_finding`
+- `high_severity_finding`
+
+## 評価観点
+
+評価時の主な観点:
+
+- 検知カバレッジ: 明確に悪性な package を `SAFE` にしないか
+- 誤検知: 正常 package をどの程度 `SAFE` に寄せられるか
+- 説明可能性: file、rule、signal まで追えるか
+- 優先度付け: `risk_score`、`risk_level`、`priority` が運用感覚に合うか
+- 安定性: 同じ入力で再実行しても結果が安定するか
+
+簡易採点表:
+
+| 項目 | 1 | 3 | 5 |
+| --- | --- | --- | --- |
+| 検知カバレッジ | 明白な malware を見逃す | 一部の malware family は拾える | 明確な悪性 package を概ね安定して拾える |
+| 誤検知 | benign package が頻繁に `MEDIUM+` になる | 良し悪しが混在する | 多くの benign package が `SAFE/LOW` に収まる |
+| 説明可能性 | なぜ当たったか追いにくい | 一部は追える | rule、signal、file path が概ね明確 |
+| 優先度付け | score が実態に合わない | 部分的に使える | score と priority が実務上有用 |
+| 拡張性 | rule/scanner の追加が壊れやすい | 中程度 | 新しい rule/scanner を素直に追加できる |
+
+## 高度化に向けた次の Step
+
+- JS / Python の taint を SSA / CFG 寄りに強化する
+- inter-procedural と cross-file の call graph 解決を厳密化する
+- wallet tampering、cookie theft、credential store abuse 向け browser scanner をさらに専用化する
+- file context の弱い package-level AST finding を減らす
+- benign / malicious corpus を継続比較できる評価 fixture を整備する
 
 ## ルールファイル
 
