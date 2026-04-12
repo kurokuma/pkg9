@@ -19,9 +19,11 @@ selectors:
 conditions:
   all_of:
     - regex:
-        pattern: '(?is)\b(?:socket\.io-client|new\s+WebSocket|io\s*\()'
+        pattern: '(?is)\b(?:socket\.io-client|new\s+WebSocket)\b'
     - regex:
-        pattern: '(?is)\b(?:on\s*\(\s*["''](?:command|cmd|message)["'']|execSync|exec\s*\(|rm\s+-rf)\b'
+        pattern: '(?is)\bon\s*\(\s*["''](?:command|cmd)["'']'
+    - regex:
+        pattern: '(?is)\b(?:execSync|exec\s*\(|rm\s+-rf)\b'
 emit:
   finding_name: socketio_c2
   message: Source file contains a socket-based command channel tied to execution or destructive actions.

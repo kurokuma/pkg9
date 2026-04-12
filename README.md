@@ -190,6 +190,13 @@ Current coverage includes:
 - typosquat detection
 - entropy and IOC-assisted findings
 
+Recent precision tuning includes:
+
+- URL dependency matching is limited to dependency sections rather than repository or homepage metadata
+- `require.cache` findings focus on mutation or deletion rather than read-only inspection
+- socket C2 detection avoids broad minified `io()` style matches
+- intent/dataflow source detection prefers secret-like env and credential material over generic `process.env` usage
+
 ## Rule Files
 
 Rules are defined in YAML and loaded from:

@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	sourceRE = regexp.MustCompile(`(?is)(\.npmrc|\.ssh|GITHUB_TOKEN|NPM_TOKEN|AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID|os\.environ|process\.env|open\(["'][^"']*\.npmrc|readFileSync\(["'][^"']*\.npmrc)`)
+	sourceRE = regexp.MustCompile(`(?is)(\.npmrc|\.ssh|GITHUB_TOKEN|NPM_TOKEN|AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID|SLACK_WEBHOOK_URL|DISCORD_WEBHOOK_URL|PRIVATE_KEY|MNEMONIC|SEED_PHRASE|ACCESS_TOKEN|API_KEY|SESSION_TOKEN|open\(["'][^"']*\.npmrc|readFileSync\(["'][^"']*\.npmrc)`)
 	sinkRE   = regexp.MustCompile(`(?is)(curl\s+-X\s*POST|requests\.(?:post|get)\(|urllib\.request|fetch\(|axios\.(?:post|get)\(|eval\s*\(|new\s+Function\s*\()`)
 	importRE = regexp.MustCompile(`(?m)(?:require\(["']\.\/([^"']+)["']\)|from\s+["']\.\/([^"']+)["'])`)
 )
@@ -302,14 +302,14 @@ func (s *jsFlowState) walkExpr(expr jsast.Expression) {
 		}
 	case *jsast.DotExpression:
 		name := strings.ToLower(jsExprName(n))
-		if strings.Contains(name, "process.env") || strings.Contains(name, ".npmrc") || strings.Contains(name, ".ssh") || strings.Contains(name, "github_token") || strings.Contains(name, "npm_token") || strings.Contains(name, "aws_") {
+		if strings.Contains(name, ".npmrc") || strings.Contains(name, ".ssh") || strings.Contains(name, "github_token") || strings.Contains(name, "npm_token") || strings.Contains(name, "aws_") || strings.Contains(name, "private_key") || strings.Contains(name, "mnemonic") || strings.Contains(name, "seed_phrase") || strings.Contains(name, "access_token") || strings.Contains(name, "api_key") || strings.Contains(name, "session_token") || strings.Contains(name, "slack_webhook_url") || strings.Contains(name, "discord_webhook_url") {
 			s.hasSource = true
 		}
 		s.walkExpr(n.Left)
 	case *jsast.BracketExpression:
 		if lit, ok := n.Member.(*jsast.StringLiteral); ok {
 			member := strings.ToLower(lit.Value.String())
-			if strings.Contains(member, "github_token") || strings.Contains(member, "npm_token") || strings.Contains(member, "aws_") {
+			if strings.Contains(member, "github_token") || strings.Contains(member, "npm_token") || strings.Contains(member, "aws_") || strings.Contains(member, "private_key") || strings.Contains(member, "mnemonic") || strings.Contains(member, "seed_phrase") || strings.Contains(member, "access_token") || strings.Contains(member, "api_key") || strings.Contains(member, "session_token") {
 				s.hasSource = true
 			}
 		}
@@ -503,11 +503,11 @@ func (s *jsFlowState) exprIsSource(expr jsast.Expression) bool {
 	switch n := expr.(type) {
 	case *jsast.DotExpression:
 		name := strings.ToLower(jsExprName(n))
-		return strings.Contains(name, "process.env") || strings.Contains(name, ".npmrc") || strings.Contains(name, ".ssh") || strings.Contains(name, "github_token") || strings.Contains(name, "npm_token") || strings.Contains(name, "aws_")
+		return strings.Contains(name, ".npmrc") || strings.Contains(name, ".ssh") || strings.Contains(name, "github_token") || strings.Contains(name, "npm_token") || strings.Contains(name, "aws_") || strings.Contains(name, "private_key") || strings.Contains(name, "mnemonic") || strings.Contains(name, "seed_phrase") || strings.Contains(name, "access_token") || strings.Contains(name, "api_key") || strings.Contains(name, "session_token") || strings.Contains(name, "slack_webhook_url") || strings.Contains(name, "discord_webhook_url")
 	case *jsast.BracketExpression:
 		if lit, ok := n.Member.(*jsast.StringLiteral); ok {
 			member := strings.ToLower(lit.Value.String())
-			return strings.Contains(member, "github_token") || strings.Contains(member, "npm_token") || strings.Contains(member, "aws_")
+			return strings.Contains(member, "github_token") || strings.Contains(member, "npm_token") || strings.Contains(member, "aws_") || strings.Contains(member, "private_key") || strings.Contains(member, "mnemonic") || strings.Contains(member, "seed_phrase") || strings.Contains(member, "access_token") || strings.Contains(member, "api_key") || strings.Contains(member, "session_token")
 		}
 	case *jsast.CallExpression:
 		name := strings.ToLower(jsExprName(n.Callee))

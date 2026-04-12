@@ -18,11 +18,18 @@ selectors:
   classifications: [source]
   languages: [javascript]
 conditions:
-  regex:
-    pattern: '(?is)\brequire\.cache\b'
+  any_of:
+    - regex:
+        pattern: '(?is)\brequire\.cache\s*\['
+    - regex:
+        pattern: '(?is)\bdelete\s+require\.cache\b'
+    - regex:
+        pattern: '(?is)\brequire\.cache\s*\.\s*[A-Za-z_$][A-Za-z0-9_$]*\s*='
+    - regex:
+        pattern: '(?is)\brequire\.cache\s*\[[^\]]+\]\s*='
 emit:
   finding_name: require_cache_poison
-  message: Source file accesses require.cache.
+  message: Source file mutates or deletes require.cache entries.
   evidence_fields: []
   context_strategy: file
   references:

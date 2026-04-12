@@ -190,6 +190,13 @@ baseline 運用の例:
 - typosquat 検知
 - entropy と IOC 補助 finding
 
+直近の精度改善:
+
+- URL dependency は repository / homepage metadata ではなく dependency section に限定
+- `require.cache` は read-only access ではなく mutation / delete を中心に検知
+- socket C2 は minified な `io()` 一般を避けるよう調整
+- intent/dataflow の source 判定は汎用 `process.env` より secret-like な env / credential material を優先
+
 ## ルールファイル
 
 ルールは YAML で定義し、次のディレクトリからロードします。
