@@ -1,6 +1,7 @@
 package intent
 
 import (
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -202,6 +203,14 @@ func (s *jsFlowState) walkBindings(list []*jsast.Binding) {
 		}
 		if binding.Initializer != nil {
 			if id, ok := binding.Target.(*jsast.Identifier); ok {
+				switch fn := binding.Initializer.(type) {
+				case *jsast.FunctionLiteral:
+					s.recordFunction(id.Name.String(), fn)
+				case *jsast.ArrowFunctionLiteral:
+					s.recordArrowFunction(id.Name.String(), fn)
+				}
+			}
+			if id, ok := binding.Target.(*jsast.Identifier); ok {
 				if call, ok := binding.Initializer.(*jsast.CallExpression); ok && strings.EqualFold(jsExprName(call.Callee), "require") && len(call.ArgumentList) > 0 {
 					if lit, ok := call.ArgumentList[0].(*jsast.StringLiteral); ok {
 						if s.importAliases == nil {
@@ -263,6 +272,11 @@ func (s *jsFlowState) walkExpr(expr jsast.Expression) {
 				// return taint is handled by parent expression checks
 			}
 		}
+		if id, ok := n.Callee.(*jsast.Identifier); ok && taintedArgs(n.ArgumentList, s) {
+			if modulePath, ok := s.importAliases[id.Name.String()]; ok {
+				s.callEdges = append(s.callEdges, modulePath)
+			}
+		}
 		if member, ok := n.Callee.(*jsast.DotExpression); ok {
 			if taintedArgs(n.ArgumentList, s) {
 				base := jsExprName(member.Left)
@@ -302,6 +316,12 @@ func (s *jsFlowState) walkExpr(expr jsast.Expression) {
 		s.walkExpr(n.Left)
 		s.walkExpr(n.Member)
 	case *jsast.AssignExpression:
+		switch right := n.Right.(type) {
+		case *jsast.FunctionLiteral:
+			s.recordAssignedFunction(n.Left, right)
+		case *jsast.ArrowFunctionLiteral:
+			s.recordAssignedArrowFunction(n.Left, right)
+		}
 		if dot, ok := n.Left.(*jsast.DotExpression); ok && (s.exprIsSource(n.Right) || s.exprUsesTainted(n.Right) || s.callReturnsTaint(n.Right)) {
 			s.markTainted(jsExprName(dot))
 		}
@@ -389,6 +409,41 @@ func (s *jsFlowState) recordFunction(name string, fn *jsast.FunctionLiteral) {
 		s.funcs[name] = summary
 	}
 	s.walkBlock(fn.Body)
+}
+
+func (s *jsFlowState) recordArrowFunction(name string, fn *jsast.ArrowFunctionLiteral) {
+	if fn == nil {
+		return
+	}
+	summary := summarizeArrowFunction(fn)
+	if s.funcs == nil {
+		s.funcs = map[string]funcSummary{}
+	}
+	if name != "" {
+		s.funcs[name] = summary
+	}
+	switch body := fn.Body.(type) {
+	case *jsast.ExpressionBody:
+		s.walkExpr(body.Expression)
+	case *jsast.BlockStatement:
+		s.walkBlock(body)
+	}
+}
+
+func (s *jsFlowState) recordAssignedFunction(left jsast.Expression, fn *jsast.FunctionLiteral) {
+	name := jsExprName(left)
+	if name == "" {
+		return
+	}
+	s.recordFunction(name, fn)
+}
+
+func (s *jsFlowState) recordAssignedArrowFunction(left jsast.Expression, fn *jsast.ArrowFunctionLiteral) {
+	name := jsExprName(left)
+	if name == "" {
+		return
+	}
+	s.recordArrowFunction(name, fn)
 }
 
 func (s *jsFlowState) markTainted(name string) {
@@ -595,6 +650,26 @@ func summarizeFunction(fn *jsast.FunctionLiteral) funcSummary {
 	return summary
 }
 
+func summarizeArrowFunction(fn *jsast.ArrowFunctionLiteral) funcSummary {
+	if fn == nil || fn.ParameterList == nil {
+		return funcSummary{}
+	}
+	bridge := &jsast.FunctionLiteral{
+		ParameterList: fn.ParameterList,
+	}
+	switch body := fn.Body.(type) {
+	case *jsast.ExpressionBody:
+		bridge.Body = &jsast.BlockStatement{
+			List: []jsast.Statement{&jsast.ReturnStatement{Argument: body.Expression}},
+		}
+	case *jsast.BlockStatement:
+		bridge.Body = body
+	default:
+		bridge.Body = &jsast.BlockStatement{}
+	}
+	return summarizeFunction(bridge)
+}
+
 func reachesSink(path string, index map[string]fileInfo, depth int, seen map[string]struct{}) bool {
 	if depth < 0 {
 		return false
@@ -612,14 +687,14 @@ func reachesSink(path string, index map[string]fileInfo, depth int, seen map[str
 	}
 	for _, edge := range info.callEdges {
 		for candidate, target := range index {
-			if stringsHasImport(candidate, edge) && (target.hasSink || hasParamToSink(target) || reachesSink(candidate, index, depth-1, seen)) {
+			if importMatches(path, candidate, edge) && (target.hasSink || hasParamToSink(target) || reachesSink(candidate, index, depth-1, seen)) {
 				return true
 			}
 		}
 	}
 	for _, imp := range info.imports {
 		for candidate, target := range index {
-			if stringsHasImport(candidate, imp) && (target.hasSink || hasParamToSink(target) || reachesSink(candidate, index, depth-1, seen)) {
+			if importMatches(path, candidate, imp) && (target.hasSink || hasParamToSink(target) || reachesSink(candidate, index, depth-1, seen)) {
 				return true
 			}
 		}
@@ -627,9 +702,17 @@ func reachesSink(path string, index map[string]fileInfo, depth int, seen map[str
 	return false
 }
 
-func stringsHasImport(path, imp string) bool {
-	normalized := strings.TrimPrefix(imp, "./")
-	return path == normalized || path == normalized+".js" || path == normalized+".py" || path == normalized+"/index.js"
+func importMatches(fromPath, candidatePath, imp string) bool {
+	if imp == "" {
+		return false
+	}
+	normalized := imp
+	if strings.HasPrefix(normalized, ".") {
+		normalized = filepath.Clean(filepath.Join(filepath.Dir(fromPath), normalized))
+	}
+	normalized = strings.TrimPrefix(normalized, "./")
+	candidate := strings.TrimPrefix(candidatePath, "./")
+	return candidate == normalized || candidate == normalized+".js" || candidate == normalized+".py" || candidate == normalized+"/index.js"
 }
 
 func filterKind(signals []map[string]any, kind string) []map[string]any {

@@ -333,6 +333,8 @@ class Analyzer(ast.NodeVisitor):
             name = full_name(node.func)
             if name in self.funcs and self.funcs[name]["returns_taint"]:
                 return True
+            if isinstance(node.func, ast.Name) and node.func.id in self.import_aliases:
+                return any(self.expr_uses_taint(arg) or source_expr(arg) for arg in node.args) or any(self.expr_uses_taint(k.value) or source_expr(k.value) for k in node.keywords)
         return any(self.expr_uses_taint(child) for child in ast.iter_child_nodes(node))
 
     def visit_Import(self, node):
@@ -383,6 +385,9 @@ class Analyzer(ast.NodeVisitor):
                 self.has_source = True
                 self.has_sink = True
                 self.intent = True
+        if isinstance(node.func, ast.Name) and node.func.id in self.import_aliases:
+            if any(source_expr(arg) or self.expr_uses_taint(arg) for arg in node.args) or any(source_expr(k.value) or self.expr_uses_taint(k.value) for k in node.keywords):
+                self.call_edges.append(self.import_aliases[node.func.id])
         if isinstance(node.func, ast.Attribute):
             base = full_name(node.func.value).split(".")[0]
             method = node.func.attr
@@ -409,6 +414,9 @@ class Analyzer(ast.NodeVisitor):
         summary.visit(node)
         self.funcs[node.name] = {"param_to_sink": summary.param_to_sink, "returns_taint": summary.returns_taint}
         self.generic_visit(node)
+
+    def visit_AsyncFunctionDef(self, node):
+        self.visit_FunctionDef(node)
 
     def visit_ClassDef(self, node):
         for item in node.body:

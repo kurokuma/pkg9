@@ -19,6 +19,7 @@ Japanese README: [README.ja.md](./README.ja.md)
 - AST-based JavaScript scanning
 - AST-based and packaging-aware Python scanning
 - AST-assisted intent and inter-module dataflow
+- Browser-focused wallet and credential theft scanning
 - Obfuscation, AI config, typosquat, entropy, lifecycle, and hash scanners
 
 ## Repository Layout
@@ -159,9 +160,9 @@ Baseline workflow:
 - `typosquat`: checks dependency names against common packages
 - `obfuscation`: detects obfuscation indicators outside minified JS
 - `ai_config`: detects prompt-injection style AI config files
-- `intent_dataflow`: detects source-sink intent coherence and cross-file flow lite
-- `intent_dataflow`: tracks source-sink coherence, alias propagation, wrapper methods, and local cross-file call edges
+- `intent_dataflow`: tracks source-sink coherence, alias propagation, function assignments, wrapper methods, imported aliases, and local cross-file call edges
 - `js_ast`: parses JavaScript AST for eval, exec, credential access, droppers, and prototype hooks
+- `browser`: detects browser wallet tampering and browser credential theft with exfiltration-aware heuristics
 - `python`: scans Python source and packaging files for exec, credentials, network, setup, and remote requirements
 
 ## Built-in Rules
@@ -178,6 +179,7 @@ Current coverage includes:
 - Telegram, Slack, and Google Analytics exfiltration patterns
 - iframe keylogging, SSH authorized_keys persistence, Electron app.asar tampering, and socket-based C2 patterns
 - install-time global package installation, localhost websocket daemon persistence, Solana dead-drop C2, and header-keyed payload execution
+- signal-backed browser wallet tampering and browser credential theft findings
 - JavaScript AST signals
 - Python behavior and packaging signals
 - Python Discord webhook, Gmail SMTP surveillance, and Startup persistence patterns
@@ -235,10 +237,10 @@ GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go test ./...
 
 ## Status
 
-This is still a foundation implementation, but it now includes AST-based JavaScript scanning, Python AST-assisted scanning, deobfuscation preprocessing, AI config scanning, typosquat detection, multi-ecosystem package parsing, richer matcher primitives, baseline-driven suppression, stronger alias/property-aware intra/inter-file dataflow, and a prioritization layer on top of risk scoring.
+This is still a foundation implementation, but it now includes AST-based JavaScript scanning, Python AST-assisted scanning, dedicated browser wallet/credential theft scanning, deobfuscation preprocessing, AI config scanning, typosquat detection, multi-ecosystem package parsing, richer matcher primitives, baseline-driven suppression, stronger alias/property-aware intra/inter-file dataflow, and a prioritization layer on top of risk scoring.
 
 ## Current Limitations
 
-- The JavaScript and Python dataflow engines now track local aliases, reassignment, object/dict property flow, wrapper methods, and simple call edges, but they are still heuristic rather than SSA/CFG-complete.
+- The JavaScript and Python dataflow engines now track local aliases, reassignment, function assignments, object/dict property flow, wrapper methods, imported function aliases, and simple call edges, but they are still heuristic rather than SSA/CFG-complete.
 - Cross-file resolution covers import graphs, imported wrappers, and local call edges, but not every dynamic import, reflection, or runtime-generated dispatch pattern.
 - Large curated IOC or threat-intel datasets remain intentionally out of scope unless explicitly added.

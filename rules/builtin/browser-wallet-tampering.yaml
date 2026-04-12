@@ -1,0 +1,26 @@
+metadata:
+  id: browser.wallet_tampering
+  name: Browser Wallet Tampering
+  description: Detects browser wallet provider tampering, transaction interception, or Electron wallet bundle modification.
+  severity: critical
+  confidence: high
+  tags: [browser, wallet, tampering]
+  category: tampering
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+scope: package
+selectors:
+  required_scanners: [browser_wallet_tampering]
+conditions:
+  scanner_signal_exists: browser_wallet_tampering
+emit:
+  finding_name: browser_wallet_tampering
+  message: Package shows browser wallet tampering or transaction interception behavior.
+  evidence_fields: []
+  context_strategy: package
+  references:
+    - https://attack.mitre.org/techniques/T1565.001/
+  remediation_hint: Review wallet-provider hooks, transaction mutation, clipboard replacement, and Electron wallet bundle edits.

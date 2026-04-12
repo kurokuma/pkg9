@@ -19,6 +19,7 @@ English README: [README.md](./README.md)
 - JavaScript の AST ベース検知
 - Python の AST / packaging 対応スキャン
 - AST 補助の intent / inter-module dataflow
+- browser 向け wallet / credential theft スキャン
 - obfuscation、AI config、typosquat、entropy、lifecycle、hash scanner
 
 ## ディレクトリ構成
@@ -159,8 +160,9 @@ baseline 運用の例:
 - `typosquat`: 依存関係名の typo-squatting 候補を検出
 - `obfuscation`: minified 以外の難読化指標を検出
 - `ai_config`: AI 設定ファイルの prompt injection を検出
-- `intent_dataflow`: source-sink の intent coherence、alias 伝播、wrapper method、local cross-file call edge を検出
+- `intent_dataflow`: source-sink の intent coherence、alias 伝播、function assignment、wrapper method、imported alias、local cross-file call edge を検出
 - `js_ast`: JavaScript AST から eval、exec、credential access、dropper、prototype hook を検出
+- `browser`: browser wallet tampering と browser credential theft を exfiltration 前提の heuristic で検出
 - `python`: Python source / packaging から exec、credential、network、setup、remote requirements を検出
 
 ## 組み込みルール
@@ -177,6 +179,7 @@ baseline 運用の例:
 - Telegram / Slack / Google Analytics 系の exfiltration pattern
 - iframe keylogging、SSH authorized_keys persistence、Electron app.asar tampering、socket ベース C2 pattern
 - install-time global package installation、localhost websocket daemon persistence、Solana dead-drop C2、header-keyed payload execution
+- signal ベースの browser wallet tampering / browser credential theft finding
 - JavaScript AST シグナル
 - Python の挙動 / packaging シグナル
 - Python の Discord webhook、Gmail SMTP surveillance、Startup persistence pattern
@@ -234,10 +237,10 @@ GOCACHE=$(pwd)/.cache/go-build GOMODCACHE=$(pwd)/.cache/go-mod go test ./...
 
 ## ステータス
 
-これはまだ基盤実装ですが、JavaScript AST scanning、Python AST-assisted scanning、deobfuscation preprocessing、AI config scanning、typosquat detection、複数 ecosystem の package parsing、richer matcher、baseline ベースの suppression、alias / property を追う強化版の intra/inter-file dataflow、risk scoring の上に乗る prioritization layer まで入っています。
+これはまだ基盤実装ですが、JavaScript AST scanning、Python AST-assisted scanning、browser wallet / credential theft 専用 scanning、deobfuscation preprocessing、AI config scanning、typosquat detection、複数 ecosystem の package parsing、richer matcher、baseline ベースの suppression、alias / property を追う強化版の intra/inter-file dataflow、risk scoring の上に乗る prioritization layer まで入っています。
 
 ## 現在の制約
 
-- JavaScript / Python の dataflow は、local alias、再代入、object/dict property flow、wrapper method、単純な call edge を追いますが、SSA / CFG 完備の解析ではなく heuristic です。
+- JavaScript / Python の dataflow は、local alias、再代入、function assignment、object/dict property flow、wrapper method、imported alias、単純な call edge を追いますが、SSA / CFG 完備の解析ではなく heuristic です。
 - cross-file 解決は import graph、imported wrapper、local call edge までで、動的 import や reflection、実行時 dispatch の全パターンは扱いません。
 - 大規模な IOC / threat-intel dataset は、明示的に追加しない限り対象外です。

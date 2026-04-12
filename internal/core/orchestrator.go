@@ -22,6 +22,7 @@ import (
 	"github.com/kurokuma/pkg9/internal/rules"
 	"github.com/kurokuma/pkg9/internal/scanners/aiconfig"
 	"github.com/kurokuma/pkg9/internal/scanners/astjs"
+	"github.com/kurokuma/pkg9/internal/scanners/browser"
 	"github.com/kurokuma/pkg9/internal/scanners/dependency"
 	"github.com/kurokuma/pkg9/internal/scanners/entropy"
 	"github.com/kurokuma/pkg9/internal/scanners/hash"
@@ -64,6 +65,7 @@ func NewEngine(engineVersion string) Engine {
 			aiconfig.Scanner{},
 			intent.Scanner{},
 			astjs.Scanner{},
+			browser.Scanner{},
 			python.Scanner{},
 		),
 	}

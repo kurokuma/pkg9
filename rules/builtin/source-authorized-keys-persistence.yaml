@@ -21,7 +21,7 @@ conditions:
     - regex:
         pattern: '(?is)authorized_keys'
     - regex:
-        pattern: '(?is)\b(?:appendFile|appendFileSync|writeFile|writeFileSync|>>)\b'
+        pattern: '(?is)\b(?:appendFile|appendFileSync|writeFile|writeFileSync)\b'
 emit:
   finding_name: authorized_keys_persistence
   message: Source file writes to SSH authorized_keys.
