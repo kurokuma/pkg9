@@ -1,0 +1,46 @@
+metadata:
+  id: package.lifecycle_dotenv_exfiltration
+  name: Lifecycle Dotenv Exfiltration
+  description: Detects install-time collection of .env files followed by outbound HTTP exfiltration.
+  severity: critical
+  confidence: high
+  tags: [package, lifecycle, credential, exfiltration]
+  category: credential_access
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://socket.dev/blog/tanstack-brandsquat-compromise
+scope: file
+selectors:
+  classifications: [source]
+  languages: [javascript, typescript]
+conditions:
+  all_of:
+    - any_of:
+        - regex:
+            pattern: '(?is)postinstall|preinstall'
+        - regex:
+            pattern: '(?is)npm_lifecycle_event'
+    - any_of:
+        - regex:
+            pattern: '(?is)\.env(\.[a-z0-9_-]+)?'
+        - regex:
+            pattern: '(?is)startsWith\s*\(\s*["\']\\.env\.'
+    - any_of:
+        - regex:
+            pattern: '(?is)fetch\s*\('
+        - regex:
+            pattern: '(?is)axios\.'
+        - regex:
+            pattern: '(?is)https?://api\.svix\.com/ingest/'
+emit:
+  finding_name: lifecycle_dotenv_exfiltration
+  message: Lifecycle script reads dotenv files and transmits contents to a remote endpoint.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://socket.dev/blog/tanstack-brandsquat-compromise
+  remediation_hint: Remove install-time dotenv reads and block outbound transmission of local secret files.

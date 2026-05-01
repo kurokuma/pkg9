@@ -1,0 +1,38 @@
+metadata:
+  id: source.claude_router_worm_chain
+  name: Claude Router Worm Chain
+  description: Detects router_runtime style chain that copies to .claude and injects postinstall into packed npm tarballs.
+  severity: critical
+  confidence: high
+  tags: [source, npm, worm, postinstall]
+  category: execution
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://socket.dev/blog/lightning-pypi-package-compromised
+scope: file
+selectors:
+  classifications: [source]
+  languages: [javascript, typescript]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)\.claude\/(router_runtime|setup)\.(js|mjs)'
+    - regex:
+        pattern: '(?is)(postinstall\s*"\s*:\s*"node\s+setup\.mjs|"postinstall"\s*:\s*"node\s+setup\.mjs")'
+    - any_of:
+        - regex:
+            pattern: '(?is)package\.json'
+        - regex:
+            pattern: '(?is)\.tgz|tar\.'
+emit:
+  finding_name: claude_router_worm_chain
+  message: Source indicates a .claude router runtime replication flow with npm postinstall injection behavior.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://socket.dev/blog/lightning-pypi-package-compromised
+  remediation_hint: Remove self-replicating setup scripts and block tarball/package.json postinstall mutations.
