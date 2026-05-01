@@ -1,0 +1,37 @@
+metadata:
+  id: source.openvsx_transitive_extensionpack
+  name: OpenVSX Transitive ExtensionPack Abuse
+  description: Detects suspicious extensionPack/extensionDependencies usage that can transitively install sleeper extensions.
+  severity: high
+  confidence: medium
+  tags: [source, supply-chain, openvsx]
+  category: supply_chain
+  namespace: builtin
+  rule_source: builtin
+  rule_version: "1.0.0"
+  schema_version: "1"
+  min_engine_version: "0.1.0"
+  references:
+    - https://socket.dev/blog/73-open-vsx-sleeper-extensions-glassworm
+scope: file
+selectors:
+  classifications: [source]
+  languages: [json]
+  paths: ["package.json"]
+conditions:
+  all_of:
+    - regex:
+        pattern: '(?is)"(extensionPack|extensionDependencies)"\s*:\s*\['
+    - any_of:
+        - regex:
+            pattern: '(?is)"[a-z0-9._-]+\.[a-z0-9._-]+"'
+        - regex:
+            pattern: '(?is)"publisher"\s*:\s*"[^"]+"'
+emit:
+  finding_name: openvsx_transitive_extensionpack
+  message: package.json contains extensionPack/extensionDependencies entries that may enable transitive sleeper-extension installation.
+  evidence_fields: []
+  context_strategy: file
+  references:
+    - https://socket.dev/blog/73-open-vsx-sleeper-extensions-glassworm
+  remediation_hint: Verify each referenced extension publisher and pin to trusted IDs only.
